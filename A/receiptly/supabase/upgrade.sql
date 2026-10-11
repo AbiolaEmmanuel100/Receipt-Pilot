@@ -1,0 +1,12 @@
+-- LEGACY — do not use this file for new work.
+--
+-- The old upgrade.sql mixed real migrations with unused tables
+-- (customers, products, expenses, admin_emails, platform_stats).
+--
+-- Existing live databases: run the numbered files in supabase/migrations/
+-- in order (001 → 004). They are idempotent and do not delete data.
+--
+-- Unused objects were not dropped. If they already exist in your project,
+-- leave them. Recreating them is optional: supabase/optional/unused_objects.sql
+--
+-- See supabase/SETUP.md.

@@ -1,0 +1,8 @@
+-- LEGACY — not part of normal installation.
+--
+-- Required grants now live in:
+--   supabase/schema.sql          (brand-new project)
+--   supabase/migrations/*.sql    (existing project)
+--
+-- Do not run this file. It is kept only so old bookmarks do not look like
+-- a missing step. See supabase/SETUP.md.
