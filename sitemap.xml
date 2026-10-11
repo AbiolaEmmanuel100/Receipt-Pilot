@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Replace YOUR-PRODUCTION-DOMAIN with the live hostname (no protocol guessing). -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://YOUR-PRODUCTION-DOMAIN/index.html</loc>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://YOUR-PRODUCTION-DOMAIN/about.html</loc>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://YOUR-PRODUCTION-DOMAIN/privacy-policy.html</loc>
+    <changefreq>yearly</changefreq>
+  </url>
+  <url>
+    <loc>https://YOUR-PRODUCTION-DOMAIN/terms.html</loc>
+    <changefreq>yearly</changefreq>
+  </url>
+</urlset>
