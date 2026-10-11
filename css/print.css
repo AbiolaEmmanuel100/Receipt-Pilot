@@ -1,0 +1,89 @@
+@page {
+  size: A4;
+  margin: 12mm;
+}
+
+@media print {
+  html, body {
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+  }
+
+  .site-header, .hero, .ad-slot, .form-col, .preview-actions, .style-pills,
+  .content-block, .account-promo, .site-footer, .nav-toggle, .actions-bar, .toast,
+  .save-dialog, .confirm-dialog, .records-toolbar, .summary-grid, .filters, .table-wrap,
+  .record-cards, .data-tools, .empty-state, .audit-box, .notice, .page-actions,
+  .view-actions, #emptyState, .edit-banner, .save-hint, .trash-panel,
+  #customDates, #tableWrap, #cards, .page > .wrap > h1,
+  .page > .wrap > h2, .page > .wrap > p, .stat, #mixNote,
+  .preview-wrap > p, main > .wrap > .ad-slot {
+    display: none !important;
+  }
+
+  .generator, .layout, .preview-wrap, .receipt-card, .wrap, main, .page,
+  .view-panel, #viewPanel, .page > .wrap {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    position: static !important;
+    background: transparent !important;
+  }
+
+  #viewPanel { display: block !important; }
+
+  .receipt {
+    display: block !important;
+    width: 100% !important;
+    max-width: 186mm !important;
+    margin: 0 auto !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    font-size: 11pt !important;
+    min-height: 0 !important;
+  }
+
+  .r-brand {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 4mm !important;
+  }
+  .receipt .logo-wrap img {
+    max-height: 16mm !important;
+    max-width: 22mm !important;
+  }
+
+  .r-table { page-break-inside: avoid; }
+  .r-summary { page-break-inside: avoid; }
+  .r-foot { page-break-inside: avoid; }
+
+  body.print-cust-record .site-header,
+  body.print-cust-record .page,
+  body.print-cust-record .cust-record-actions,
+  body.print-cust-record #custRecordClose {
+    display: none !important;
+  }
+  body.print-cust-record #custRecordDialog.save-dialog {
+    display: block !important;
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    inset: auto !important;
+  }
+  body.print-cust-record .cust-record-card {
+    box-shadow: none !important;
+    border: 0 !important;
+    width: 100% !important;
+    max-height: none !important;
+  }
+  body.print-cust-record #custRecordDoc {
+    display: block !important;
+  }
+}
