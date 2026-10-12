@@ -11,6 +11,6 @@ Disallow: /r.html
 Disallow: /records.html
 Disallow: /sales.html
 Disallow: /customers.html
+Disallow: /notifications.html
 
-# Replace YOUR-PRODUCTION-DOMAIN after the live domain is connected.
-Sitemap: sitemap.xml
+Sitemap: https://receipt-pilot.com/sitemap.xml
