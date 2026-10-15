@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Receipt Records &amp; Audit | Receipt-Pilot</title>
+  <meta name="description" content="Search, filter, view, print and export saved receipts. Simple receipt records and audit summary stored on this device.">
+  <meta property="og:title" content="Receipt Records | Receipt Pilot">
+  <meta property="og:description" content="Find old receipts, review sales totals and export records for auditing.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="canonical" href="records.html">
+  <meta property="og:site_name" content="Receipt Pilot">
+  <meta property="og:title" content="Receipt Records | Receipt Pilot">
+  <meta property="og:description" content="View and export receipts saved in this browser on this device.">
+  <meta property="og:image" content="assets/og-image.png">
+  <meta property="og:image:alt" content="Receipt Pilot">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Receipt Records | Receipt Pilot">
+  <meta name="twitter:description" content="View and export receipts saved in this browser on this device.">
+  <meta name="twitter:image" content="assets/og-image.png">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Receipt Pilot">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/print.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="logo" href="index.html">Receipt-<span>Pilot</span></a>
+      <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="siteNav">Menu</button>
+      <nav class="nav" id="siteNav" aria-label="Primary">
+        <a href="index.html">Receipt Generator</a>
+        <a href="records.html" class="active">History</a>
+        <a href="sales.html">Sales Records</a>
+        <a href="customers.html">Customers</a>
+        <a href="about.html">About</a>
+        <button type="button" class="btn btn-ghost btn-sm" data-open-login>Account</button>
+      </nav>
+    </div>
+  </header>
+  <main class="page hist-page">
+    <div class="wrap">
+      <div class="hist-head">
+        <div>
+          <h1>Receipt History</h1>
+          <p class="lede">Your saved receipts, organized in one place.</p>
+        </div>
+        <a class="btn btn-primary" href="index.html#generator">Create Receipt</a>
+      </div>
+
+      <div class="summary-grid summary-3">
+        <div class="stat"><span>Total Sales</span><strong id="statSales">₦0.00</strong></div>
+        <div class="stat"><span>Total Paid</span><strong id="statPaid">₦0.00</strong></div>
+        <div class="stat"><span>Outstanding</span><strong id="statOut">₦0.00</strong></div>
+      </div>
+      <p class="hint" id="mixNote" hidden>* Totals mix currencies and are shown as a simple sum of amounts.</p>
+      <span id="statCount" hidden>0</span>
+      <p class="notice" id="historyNotice" hidden></p>
+
+      <div class="hist-search">
+        <label class="sr-only" for="search">Search receipts</label>
+        <input type="search" id="search" placeholder="Search receipts...">
+      </div>
+
+      <div class="hist-filters">
+        <div class="field"><label for="filterRange">Date</label>
+          <select id="filterRange">
+            <option value="all">All dates</option>
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="lastMonth">Last Month</option>
+            <option value="year">This Year</option>
+            <option value="custom">Custom Date Range</option>
+          </select>
+        </div>
+        <div class="field"><label for="filterStatus">Payment Status</label>
+          <select id="filterStatus">
+            <option value="all">All</option>
+            <option value="PAID IN FULL">Paid in Full</option>
+            <option value="PARTIALLY PAID">Partially Paid</option>
+            <option value="UNPAID">Unpaid</option>
+          </select>
+        </div>
+        <div class="field"><label for="filterMethod">Payment Method</label>
+          <select id="filterMethod">
+            <option value="all">All</option>
+            <option>Cash</option>
+            <option>Bank Transfer</option>
+            <option>Card</option>
+            <option>POS</option>
+            <option>Mobile Payment</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field"><label for="sortBy">Sort</label>
+          <select id="sortBy">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="high">Highest amount</option>
+            <option value="low">Lowest amount</option>
+            <option value="number">Receipt number</option>
+          </select>
+        </div>
+      </div>
+
+      <details class="fold" id="moreFilters">
+        <summary>More Filters</summary>
+        <div class="fold-body more-filter-grid">
+          <div class="field"><label for="searchNumber">Receipt number</label><input type="search" id="searchNumber" placeholder="RCT-000001"></div>
+          <div class="field"><label for="searchCustomer">Customer name</label><input type="search" id="searchCustomer" placeholder="Customer"></div>
+          <div class="field"><label for="searchPhone">Phone number</label><input type="search" id="searchPhone" placeholder="Phone"></div>
+          <div class="field"><label for="filterCurrency">Currency</label>
+            <select id="filterCurrency">
+              <option value="all">All</option>
+              <option value="NGN">₦ Naira</option>
+              <option value="USD">$ Dollar</option>
+              <option value="GBP">£ Pound</option>
+              <option value="EUR">€ Euro</option>
+              <option value="GHS">GH₵ Cedi</option>
+              <option value="KES">KSh Shilling</option>
+            </select>
+          </div>
+          <div class="grid-2" id="customDates" hidden>
+            <div class="field"><label for="dateFrom">From</label><input type="date" id="dateFrom"></div>
+            <div class="field"><label for="dateTo">To</label><input type="date" id="dateTo"></div>
+          </div>
+        </div>
+      </details>
+
+      <div class="hist-tools">
+        <details class="tool-menu">
+          <summary>Export</summary>
+          <div class="tool-menu-list">
+            <button type="button" class="tool-item" id="exportCsv">Export to CSV</button>
+            <button type="button" class="tool-item" id="backupBtn">Export My Data</button>
+          </div>
+        </details>
+        <details class="tool-menu">
+          <summary>Manage Records</summary>
+          <div class="tool-menu-list">
+            <button type="button" class="tool-item" id="restoreBtn">Restore Records</button>
+            <button type="button" class="tool-item tool-danger" id="clearAll">Clear All Records</button>
+          </div>
+        </details>
+        <input type="file" id="restoreFile" accept="application/json,.json" hidden>
+      </div>
+
+      <details class="fold" id="bizSummaryFold">
+        <summary>Business Summary</summary>
+        <div class="fold-body">
+          <div class="audit-box">
+            <div class="stat"><span>Receipts in period</span><strong id="auditCount">0</strong></div>
+            <div class="stat"><span>Sales in period</span><strong id="auditSales">₦0.00</strong></div>
+            <div class="stat"><span>Paid in period</span><strong id="auditPaid">₦0.00</strong></div>
+            <div class="stat"><span>Outstanding in period</span><strong id="auditOut">₦0.00</strong></div>
+            <div class="stat"><span>Average receipt</span><strong id="auditAvg">₦0.00</strong></div>
+            <div class="stat"><span>Paid receipts</span><strong id="auditPaidN">0</strong></div>
+            <div class="stat"><span>Partially paid</span><strong id="auditPartN">0</strong></div>
+            <div class="stat"><span>Unpaid receipts</span><strong id="auditUnpaidN">0</strong></div>
+          </div>
+        </div>
+      </details>
+
+      <div class="empty-state" id="emptyState" hidden>
+        <h2>No receipts yet</h2>
+        <p>Create your first receipt to get started.</p>
+        <a class="btn btn-primary" href="index.html#generator">Create Receipt</a>
+      </div>
+
+      <div id="tableWrap">
+        <div class="table-scroll">
+          <table class="records-table">
+            <thead>
+              <tr>
+                <th>Receipt No.</th><th>Date</th><th>Customer</th><th class="col-amt">Total</th>
+                <th>Status</th><th>Owner</th><th>Created</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="recordsBody"></tbody>
+          </table>
+        </div>
+        <div class="record-cards" id="cards"></div>
+      </div>
+
+      <details class="fold" id="activityFold">
+        <summary>Recent Activity</summary>
+        <div class="fold-body">
+          <ul id="activityList" class="activity-list hint"></ul>
+          <button type="button" class="btn btn-ghost btn-sm" id="activityMore" hidden>View more</button>
+        </div>
+      </details>
+
+      <section class="trash-panel" id="trashPanel">
+        <h2>Trash</h2>
+        <p class="hint">Deleted receipts are automatically removed after <span id="trashDays">30</span> days.</p>
+        <div class="data-tools trash-tools">
+          <button type="button" class="btn btn-secondary" id="restoreSelected">Restore selected</button>
+          <button type="button" class="btn btn-secondary" id="restoreAll">Restore All Receipts</button>
+          <button type="button" class="btn btn-danger" id="purgeSelected">Delete selected permanently</button>
+        </div>
+        <p id="trashEmpty" class="hint">Trash is empty.</p>
+        <div class="table-scroll" id="trashWrap" hidden>
+          <table class="records-table">
+            <thead>
+              <tr>
+                <th></th><th>Receipt No.</th><th>Customer</th><th class="col-amt">Total</th><th>Deleted</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="trashBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="save-dialog receipt-preview-dialog" id="previewDialog" hidden>
+        <div class="card receipt-preview-card">
+          <div class="receipt-preview-head">
+            <div>
+              <h2>Receipt Preview</h2>
+              <p class="hint" id="previewSub"></p>
+            </div>
+            <button type="button" class="confirm-x" id="previewClose" aria-label="Close">×</button>
+          </div>
+          <div class="receipt-preview-scroll">
+            <div id="previewMount" class="receipt"></div>
+          </div>
+        </div>
+      </div>
+
+      <section class="view-panel" id="viewPanel" hidden>
+        <h2>Saved receipt <span id="viewNumber"></span></h2>
+        <div class="view-actions actions-bar">
+          <button type="button" class="btn btn-primary" id="viewSend">Send Receipt</button>
+          <button type="button" class="btn btn-primary" id="viewPdf">Download PDF</button>
+          <button type="button" class="btn btn-secondary" id="viewImage">Download Image</button>
+          <button type="button" class="btn btn-secondary" id="viewPrint">Print</button>
+          <button type="button" class="btn btn-secondary" id="viewEdit">Edit</button>
+          <button type="button" class="btn btn-secondary" id="viewDup">Create again</button>
+          <button type="button" class="btn btn-ghost" id="viewBack">Back to Records</button>
+        </div>
+        <div class="card receipt-card"><div id="viewPreview" class="receipt"></div></div>
+        <p class="hint" id="viewHistory"></p>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <div>
+        <strong>Receipt Pilot</strong>
+        <p>Simple receipts. Organized records.</p>
+        <p>&copy; 2026 Receipt Pilot</p>
+      </div>
+      <div class="footer-links">
+        <a href="index.html">Receipt Generator</a>
+        <a href="records.html">Receipts</a>
+        <a href="sales.html">Sales Records</a>
+        <a href="about.html">About</a>
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <a href="terms.html">Terms</a>
+      </div>
+    </div>
+  </footer>
+  <script src="js/config.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js" defer></script>
+  <script src="js/supabase.js" defer></script>
+  <script src="js/errors.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" defer></script>
+  <script src="js/storage.js" defer></script>
+  <script src="js/phone.js" defer></script>
+  <script src="js/calculations.js" defer></script>
+  <script src="js/validation.js" defer></script>
+  <script src="js/receipt.js" defer></script>
+  <script src="js/pdf.js" defer></script>
+  <script src="js/share.js" defer></script>
+  <script src="js/export.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/account.js" defer></script>
+  <script src="js/usage.js" defer></script>
+  <script src="js/sync.js" defer></script>
+  <script src="js/activity.js" defer></script>
+  <script src="js/records.js" defer></script>
+  <script src="js/pwa.js" defer></script>
+  <script src="js/analytics.js" defer></script>
+</body>
+</html>
