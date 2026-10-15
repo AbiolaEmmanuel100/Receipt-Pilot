@@ -975,3 +975,14 @@ textarea { min-height: 80px; resize: vertical; }
   .phone-cc-btn { width: 100%; }
   .phone-cc-panel { width: min(100%, 360px); }
 }
+
+.billing-card { width: min(94vw, 460px) !important; max-height: 90vh; overflow: auto; }
+.billing-card h2 { text-align: center; margin-bottom: 8px; }
+.billing-plan {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+  background: #fff; font-weight: 700; cursor: pointer;
+}
+.billing-plan:has(input:checked) { border-color: var(--brand); background: var(--brand-light, #ecfdf5); }
+.billing-card .btn { width: 100%; min-height: 44px; margin-top: 8px; }
+.billing-card .error { color: var(--danger); min-height: 1.2em; margin: 8px 0; }
