@@ -15,6 +15,14 @@
     return !!(u.email_confirmed_at || u.confirmed_at);
   }
 
+  function publicOrigin() {
+    return "https://receipt-pilot.com";
+  }
+
+  function authRedirect(path) {
+    return publicOrigin() + (path || "/");
+  }
+
   function trialExpired(u) {
     if (!u) return false;
     var now = Date.now();
@@ -417,7 +425,7 @@
         password: pass,
         options: {
           data: { business_name: bizName },
-          emailRedirectTo: (location.origin.replace(/\/$/, "") + "/")
+          emailRedirectTo: authRedirect("/")
         }
       });
       if (result.error) throw result.error;
@@ -627,7 +635,7 @@
     }
     try {
       var result = await sb.auth.resetPasswordForEmail(email, {
-        redirectTo: location.origin + "/reset.html"
+        redirectTo: authRedirect("/reset.html")
       });
       if (result.error) throw result.error;
       ok.textContent = "If that email has an account, a reset link is on its way.";
@@ -658,7 +666,7 @@
       var result = await sb.auth.resend({
         type: "signup",
         email: email,
-        options: { emailRedirectTo: (location.origin.replace(/\/$/, "") + "/") }
+        options: { emailRedirectTo: authRedirect("/") }
       });
       if (result.error) throw result.error;
       ok.textContent = "Verification email resent. Check your inbox.";
@@ -666,6 +674,30 @@
     } catch (e) {
       err.textContent = ReceiptlyCloud.friendlyError(e);
     }
+  }
+
+  function authCallbackMessage() {
+    var hash = new URLSearchParams(String(location.hash || "").replace(/^#/, ""));
+    var query = new URLSearchParams(location.search || "");
+    var code = hash.get("error_code") || query.get("error_code") || "";
+    var desc = hash.get("error_description") || query.get("error_description") || "";
+    var type = hash.get("type") || query.get("type") || "";
+    if (/otp_expired|expired/i.test(code + " " + desc)) {
+      return "This email link has expired. Request a new verification or reset link and try again.";
+    }
+    if (hash.get("error") || query.get("error")) {
+      return "This email link is invalid or has already been used.";
+    }
+    if (type === "signup" || type === "email" || type === "invite") {
+      return "Email verified. You can continue in Receipt Pilot.";
+    }
+    return "";
+  }
+
+  function clearAuthParams() {
+    if (!location.hash && !/[?&](error|error_code|type|access_token)=/.test(location.search)) return;
+    history.replaceState(null, "", location.pathname + location.search.replace(/[?&](error|error_code|error_description|type|access_token|refresh_token)=[^&]*/g, "").replace(/[?&]$/, ""));
+    if (location.hash) history.replaceState(null, "", location.pathname + location.search);
   }
 
   function updateChip(text, sticky) {
@@ -793,6 +825,9 @@
 
     ensureClient().then(function (sb) {
       paintAccountButtons();
+      var callbackMessage = authCallbackMessage();
+      if (callbackMessage && global.ReceiptlyUI && ReceiptlyUI.toast) ReceiptlyUI.toast(callbackMessage);
+      clearAuthParams();
       if (!sb) {
         readyResolve();
         return;
