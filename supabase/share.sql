@@ -1,9 +1,0 @@
--- LEGACY — not required for a fresh install.
---
--- get_shared_receipt() is now in:
---   supabase/schema.sql
---   supabase/migrations/003_get_shared_receipt.sql
---
--- If you already ran this file in the past, you do not need to run it again.
--- Running migrations/003 is safe (CREATE OR REPLACE, same function).
--- See supabase/SETUP.md.
