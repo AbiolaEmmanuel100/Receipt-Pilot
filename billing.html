@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Subscription | Receipt Pilot</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="logo" href="index.html">Receipt-<span>Pilot</span></a>
+      <nav class="nav" aria-label="Primary">
+        <a href="index.html">Receipt Generator</a>
+        <a href="records.html">History</a>
+        <a href="billing.html" class="active">Subscription</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap" style="padding:24px 0 48px">
+    <h1>Subscription</h1>
+    <p id="billingStatus">Sign in to see your trial and subscription.</p>
+    <p>The charge is always in Nigerian Naira. Local currency display is an estimate only.</p>
+    <form id="billingForm">
+      <fieldset>
+        <legend>Plan</legend>
+        <label><input type="radio" name="plan" value="monthly" checked> Monthly — ₦1,500</label><br>
+        <label><input type="radio" name="plan" value="quarterly"> Quarterly — ₦4,275</label><br>
+        <label><input type="radio" name="plan" value="semi_annual"> Semi-annual — ₦8,100</label><br>
+        <label><input type="radio" name="plan" value="annual"> Annual — ₦15,300</label>
+      </fieldset>
+      <fieldset>
+        <legend>Renewal</legend>
+        <label><input type="radio" name="renewal" value="manual" checked> Manual renewal — you start each payment</label><br>
+        <label id="autoLabel"><input type="radio" name="renewal" value="automatic" id="autoRenewal" disabled> Automatic renewal — not available until Paystack recurring plans are configured and you explicitly opt in</label>
+      </fieldset>
+      <p class="hint">A successful one-time payment is not consent for future charges. Receipts already saved are not deleted if access expires. Files already stored on this device cannot be removed remotely.</p>
+      <button class="btn btn-primary" type="submit" id="checkoutBtn">Continue to Paystack</button>
+      <p id="billingError" class="error"></p>
+    </form>
+  </main>
+  <script src="js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/billing.js"></script>
+</body>
+</html>
