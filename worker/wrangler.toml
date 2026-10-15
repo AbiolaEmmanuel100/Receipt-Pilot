@@ -1,0 +1,14 @@
+name = "receipt-pilot-billing"
+main = "billing.js"
+compatibility_date = "2026-10-14"
+
+# Deploy this as a script-capable Worker. The current static-assets Worker
+# cannot hold secrets. Do not put secrets in this file.
+# wrangler secret put PAYSTACK_SECRET_KEY
+# wrangler secret put PAYSTACK_WEBHOOK_SECRET
+# wrangler secret put SUPABASE_URL
+# wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+
+[vars]
+SITE_ORIGIN = "https://receipt-pilot.com"
+PAYSTACK_RECURRING_ENABLED = "false"
