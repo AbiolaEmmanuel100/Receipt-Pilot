@@ -8,7 +8,7 @@
     siteOrigin: "",
     supabaseUrl: "https://xwmfkfcsyqgwtfjumubh.supabase.co",
     supabaseAnonKey: "sb_publishable_PZHC5xhToq7OWLGGnKhWwA_5nQZf-ge",
-    billingWorkerUrl: ""
+    billingWorkerUrl: "https://receipt-pilot-billing.eabiolakayode.workers.dev"
   };
 
   global.ReceiptlyConfig.isSupabaseConfigured = function () {
