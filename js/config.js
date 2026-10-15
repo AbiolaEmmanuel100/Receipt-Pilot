@@ -5,7 +5,7 @@
   global.ReceiptlyConfig = {
     analyticsEnabled: true,
     gaMeasurementId: "G-XXXXXXXXXX",
-    siteOrigin: "",
+    siteOrigin: "https://receipt-pilot.com",
     supabaseUrl: "https://xwmfkfcsyqgwtfjumubh.supabase.co",
     supabaseAnonKey: "sb_publishable_PZHC5xhToq7OWLGGnKhWwA_5nQZf-ge",
     billingWorkerUrl: "https://receipt-pilot-billing.eabiolakayode.workers.dev"
