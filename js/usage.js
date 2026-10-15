@@ -132,7 +132,8 @@
     if (loggedIn()) {
       var u = global.ReceiptlyAccount && ReceiptlyAccount.user && ReceiptlyAccount.user();
       if (u && !entitled(u) && (u.trialEndsAt || u.subscriptionExpiresAt)) {
-        location.href = "billing.html";
+        if (global.ReceiptlyBilling && ReceiptlyBilling.open) ReceiptlyBilling.open();
+        else location.href = "billing.html";
       }
       return false;
     }
@@ -160,7 +161,10 @@
       if (signup) {
         signup.hidden = false;
         signup.textContent = "View plans";
-        signup.onclick = function () { location.href = "billing.html"; };
+        signup.onclick = function () {
+          if (global.ReceiptlyBilling && ReceiptlyBilling.open) ReceiptlyBilling.open();
+          else location.href = "billing.html";
+        };
       }
       banner.hidden = false;
       return;
