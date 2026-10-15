@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reset password | Receipt-Pilot</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="logo" href="index.html">Receipt-<span>Pilot</span></a>
+    </div>
+  </header>
+  <main class="page">
+    <div class="wrap page-card">
+      <h1>Choose a new password</h1>
+      <form id="resetForm">
+        <div class="field"><label for="newPass">New password</label><input id="newPass" type="password" minlength="6" required></div>
+        <div class="field"><label for="newPass2">Confirm password</label><input id="newPass2" type="password" required></div>
+        <p class="error" id="resetError"></p>
+        <button class="btn btn-primary" type="submit">Save password</button>
+      </form>
+    </div>
+  </main>
+  <script src="js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    document.getElementById("resetForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var err = document.getElementById("resetError");
+      err.textContent = "";
+      var a = document.getElementById("newPass").value;
+      var b = document.getElementById("newPass2").value;
+      if (a !== b) { err.textContent = "Passwords do not match."; return; }
+      var sb = ReceiptlyCloud.ready ? await ReceiptlyCloud.ready() : ReceiptlyCloud.client();
+      if (!sb) {
+        err.textContent = "Unable to load the account service. Check your internet connection and try again.";
+        return;
+      }
+      try {
+        var result = await sb.auth.updateUser({ password: a });
+        if (result.error) throw result.error;
+        location.href = "index.html";
+      } catch (ex) {
+        err.textContent = ReceiptlyCloud.friendlyError(ex);
+      }
+    });
+  </script>
+  <script src="js/pwa.js" defer></script>
+</body>
+</html>
