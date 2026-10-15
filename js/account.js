@@ -168,7 +168,7 @@
             '<section class="acct-section">' +
               '<div class="acct-row"><span class="acct-label">Email</span><strong id="accountEmail"></strong></div>' +
               '<div class="acct-row"><span class="acct-label">Business</span><strong id="accountBiz"></strong></div>' +
-              '<div class="acct-row"><span class="acct-label">Subscription</span><a href="billing.html">Manage subscription</a></div>' +
+              '<div class="acct-row"><span class="acct-label">Subscription</span><button type="button" class="auth-link" data-open-billing>Manage subscription</button></div>' +
               '<div class="acct-row"><span class="acct-label">Last sign-in</span><strong id="accountLastSignIn"></strong></div>' +
               '<p id="accountWho" class="sr-only"></p>' +
               '<p id="accountSession" class="sr-only"></p>' +
