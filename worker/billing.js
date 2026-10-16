@@ -36,6 +36,9 @@ export default {
     if (url.pathname === "/api/billing/status" && request.method === "GET") {
       return cors(await status(request, env));
     }
+    if (url.pathname === "/api/billing/verify" && request.method === "POST") {
+      return cors(await verifyReturn(request, env));
+    }
     return new Response("Not found", { status: 404 });
   }
 };
@@ -75,6 +78,7 @@ async function checkout(request, env) {
   if (renewal === "automatic" && !(recurringEnabled(env) && planCode(env, body.plan_code))) {
     return json({ error: "Automatic renewal is not available. Choose manual renewal." }, 400);
   }
+  if (!env.PAYSTACK_SECRET_KEY) return json({ error: "Paystack is not configured on the payment Worker." }, 503);
   const payload = {
     email: user.email,
     amount: plan.kobo,
@@ -128,7 +132,7 @@ async function applyPayment(env, verified, event) {
     body: JSON.stringify({
       p_user_id: meta.user_id,
       p_provider: "paystack",
-      p_provider_event_id: event.id || (event.data && event.data.id) || null,
+      p_provider_event_id: event && (event.id || (event.data && event.data.id)) ? String(event.id || event.data.id) : null,
       p_provider_reference: verified.reference,
       p_plan_code: meta.plan_code,
       p_amount_minor: verified.amount,
@@ -137,6 +141,22 @@ async function applyPayment(env, verified, event) {
     })
   });
   return typeof result === "string" ? result : "rpc_error";
+}
+
+async function verifyReturn(request, env) {
+  const user = await requireUser(request, env);
+  if (!user) return json({ error: "Sign in required." }, 401);
+  if (!env.PAYSTACK_SECRET_KEY) return json({ error: "Paystack is not configured on the payment Worker." }, 503);
+  const body = await request.json().catch(function () { return {}; });
+  const reference = String(body.reference || "").trim();
+  if (!reference) return json({ error: "Missing payment reference." }, 400);
+  const verified = await verifyPaystack(env, reference);
+  if (!verified.ok) return json({ error: "Paystack has not confirmed this payment." }, 402);
+  if (!verified.metadata || verified.metadata.user_id !== user.id) {
+    return json({ error: "This payment does not belong to the signed-in account." }, 403);
+  }
+  const applied = await applyPayment(env, verified, { id: "return:" + reference, data: { id: reference } });
+  return json({ result: applied, reference: verified.reference });
 }
 
 async function status(request, env) {
