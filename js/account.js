@@ -162,6 +162,7 @@
       var fromPassword = document.getElementById("loginEmail");
       var toMagic = document.getElementById("magicEmail");
       if (toMagic && fromPassword && fromPassword.value && !toMagic.value) toMagic.value = fromPassword.value;
+      showCodeRequestStep();
     }
   }
 
@@ -265,9 +266,18 @@
                 '<p class="error" id="magicError"></p>' +
                 '<p class="ok" id="magicOk"></p>' +
                 '<label class="hint"><input type="checkbox" id="rememberMagicEmail"> Remember this email on this browser</label>' +
-                '<button class="btn btn-primary" type="submit" id="magicSubmit">Email me a sign-in link</button>' +
+                '<button class="btn btn-primary" type="submit" id="magicSubmit">Email me a sign-in code</button>' +
               "</form>" +
-              '<p class="hint">We\'ll send a secure sign-in link to your email address.</p>' +
+              '<form id="otpForm" hidden>' +
+                "<h3>Check your email</h3>" +
+                '<p id="otpEmailLine"></p>' +
+                '<div class="field"><label for="otpCode">Sign-in code</label><input id="otpCode" class="auth-input" inputmode="numeric" autocomplete="one-time-code" required></div>' +
+                '<p class="error" id="otpError"></p>' +
+                '<p class="ok" id="otpOk"></p>' +
+                '<button class="btn btn-primary" type="submit" id="otpSubmit">Verify and sign in</button>' +
+                '<p class="auth-switch"><button type="button" id="resendOtp">Resend code</button> · <button type="button" id="changeOtpEmail">Use a different email</button></p>' +
+              "</form>" +
+              '<p class="hint">We\'ll email a sign-in code for this address. Enter it here. This is not a password reset.</p>' +
               '<p class="auth-switch">Prefer using a password? <button type="button" id="showPasswordLogin">Log in with password</button></p>' +
             "</div>" +
             '<div id="passwordLogin">' +
@@ -279,7 +289,7 @@
                 '<label class="hint"><input type="checkbox" id="rememberLoginEmail"> Remember this email on this browser</label>' +
                 '<button class="btn btn-primary" type="submit" id="loginSubmit">Log in</button>' +
               "</form>" +
-              '<p class="auth-switch"><button type="button" id="showMagic">Sign in with a magic link</button></p>' +
+              '<p class="auth-switch"><button type="button" id="showMagic">Sign in with an email code</button></p>' +
             "</div>" +
             '<p class="auth-switch">Don\'t have an account? <button type="button" id="showSignup">Create account</button></p>' +
           "</div>" +
@@ -1000,6 +1010,28 @@
     showPanel("accountPanel");
   }
 
+  var pendingOtpEmail = "";
+  var otpBusy = false;
+
+  function showOtpStep(email) {
+    pendingOtpEmail = email;
+    var line = document.getElementById("otpEmailLine");
+    if (line) line.textContent = "Enter the code sent to " + email + ".";
+    var form = document.getElementById("magicForm");
+    var otp = document.getElementById("otpForm");
+    if (form) form.hidden = true;
+    if (otp) otp.hidden = false;
+    var code = document.getElementById("otpCode");
+    if (code) code.focus();
+  }
+
+  function showCodeRequestStep() {
+    var form = document.getElementById("magicForm");
+    var otp = document.getElementById("otpForm");
+    if (form) form.hidden = false;
+    if (otp) otp.hidden = true;
+  }
+
   async function sendMagic(ev) {
     if (ev) ev.preventDefault();
     var err = document.getElementById("magicError");
@@ -1007,7 +1039,7 @@
     if (err) err.textContent = "";
     if (ok) ok.textContent = "";
     if (Date.now() < magicUntil) {
-      if (err) err.textContent = "Please wait before requesting another link.";
+      if (err) err.textContent = "Please wait before requesting another code.";
       return;
     }
     var email = String(document.getElementById("magicEmail").value || "").trim();
@@ -1029,11 +1061,52 @@
       });
       if (result.error) throw result.error;
       magicUntil = Date.now() + 60000;
-      if (ok) ok.textContent = "Request accepted. Check that inbox for the sign-in link. This does not confirm the email was delivered, and it is not a password reset.";
+      showOtpStep(email);
+      var otpOk = document.getElementById("otpOk");
+      if (otpOk) otpOk.textContent = "Request accepted. If this address can sign in, a code is on its way. This does not confirm delivery.";
     } catch (e) {
       if (err) err.textContent = authErrorMessage(e);
     } finally {
-      setBusy(btn, false, "Email me a sign-in link");
+      setBusy(btn, false, "Email me a sign-in code");
+    }
+  }
+
+  async function verifyCode(ev) {
+    if (ev) ev.preventDefault();
+    if (otpBusy) return;
+    var err = document.getElementById("otpError");
+    var ok = document.getElementById("otpOk");
+    if (err) err.textContent = "";
+    if (ok) ok.textContent = "";
+    var code = String(document.getElementById("otpCode").value || "").replace(/\s+/g, "");
+    if (!pendingOtpEmail || !/^\d{6,10}$/.test(code)) {
+      if (err) err.textContent = "Enter the complete code from the email.";
+      return;
+    }
+    var sb = await ensureClient();
+    if (!sb) {
+      if (err) err.textContent = notConnectedMessage();
+      return;
+    }
+    otpBusy = true;
+    var btn = document.getElementById("otpSubmit");
+    setBusy(btn, true, "Checking…");
+    try {
+      var result = await sb.auth.verifyOtp({ email: pendingOtpEmail, token: code, type: "email" });
+      if (result.error) {
+        result = await sb.auth.verifyOtp({ email: pendingOtpEmail, token: code, type: "magiclink" });
+      }
+      if (result.error) throw result.error;
+      if (ok) ok.textContent = "Code accepted. Signing you in.";
+      show("authDialog", false);
+    } catch (e) {
+      var m = String((e && e.message) || "");
+      if (/expired/i.test(m)) err.textContent = "That code has expired. Request a new one.";
+      else if (/invalid|otp|token/i.test(m)) err.textContent = "That code is invalid or has already been used.";
+      else err.textContent = authErrorMessage(e);
+    } finally {
+      otpBusy = false;
+      setBusy(btn, false, "Verify and sign in");
     }
   }
 
@@ -1100,8 +1173,23 @@
     });
     document.getElementById("forgotToLogin").addEventListener("click", function () { showPanel("loginPanel"); });
     document.getElementById("showPasswordLogin").addEventListener("click", function () { showLoginMode("password"); });
-    document.getElementById("showMagic").addEventListener("click", function () { showLoginMode("magic"); });
+    document.getElementById("showMagic").addEventListener("click", function () {
+      showCodeRequestStep();
+      showLoginMode("magic");
+    });
     document.getElementById("magicForm").addEventListener("submit", sendMagic);
+    document.getElementById("otpForm").addEventListener("submit", verifyCode);
+    document.getElementById("resendOtp").addEventListener("click", function () {
+      showCodeRequestStep();
+      sendMagic();
+    });
+    document.getElementById("changeOtpEmail").addEventListener("click", function () {
+      var err = document.getElementById("otpError");
+      var ok = document.getElementById("otpOk");
+      if (err) err.textContent = "";
+      if (ok) ok.textContent = "";
+      showCodeRequestStep();
+    });
     document.getElementById("reauthForm").addEventListener("submit", submitReauth);
     document.getElementById("reauthCancel").addEventListener("click", cancelReauth);
     document.getElementById("emailChangeForm").addEventListener("submit", requestEmailChange);
