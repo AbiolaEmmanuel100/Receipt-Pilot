@@ -203,6 +203,7 @@
               authField("loginEmail", "Email", "email", "email") +
               pwField("loginPass", "Password", "current-password") +
               '<p><button type="button" class="auth-link" id="forgotPass">Forgot password?</button></p>' +
+              '<p><button type="button" class="auth-link" id="showMagic">Email me a sign-in link</button></p>' +
               '<p class="error" id="loginError"></p>' +
               '<button class="btn btn-primary" type="submit" id="loginSubmit">Log in</button>' +
             "</form>" +
@@ -240,6 +241,28 @@
             '<p class="auth-switch"><button type="button" id="verifyToLogin">Back to log in</button></p>' +
           "</div>" +
 
+          '<div id="magicPanel" hidden>' +
+            "<h2>Email sign-in link</h2>" +
+            "<p>Enter your email and we will send a one-time sign-in link. This is not a password reset.</p>" +
+            '<form id="magicForm">' +
+              '<div class="field"><label for="magicEmail">Email</label><input id="magicEmail" class="auth-input" type="email" required autocomplete="email"></div>' +
+              '<p class="error" id="magicError"></p>' +
+              '<p class="ok" id="magicOk"></p>' +
+              '<button class="btn btn-primary" type="submit" id="magicSubmit">Send sign-in link</button>' +
+            "</form>" +
+            '<p class="auth-switch"><button type="button" id="magicToLogin">Back to log in</button></p>' +
+          "</div>" +
+
+          '<div id="reauthPanel" hidden>' +
+            "<h2>Confirm it is you</h2>" +
+            "<p>Enter your current password to continue. This does not change your password.</p>" +
+            '<form id="reauthForm">' +
+              pwField("reauthPass", "Current password", "current-password") +
+              '<p class="error" id="reauthError"></p>' +
+              '<button class="btn btn-primary" type="submit" id="reauthSubmit">Confirm</button>' +
+            "</form>" +
+            '<p class="auth-switch"><button type="button" id="reauthCancel">Cancel</button></p>' +
+          "</div>" +
           '<div id="forgotPanel" hidden>' +
             "<h2>Reset password</h2>" +
             "<p>Enter your email and we will send a reset link.</p>" +
@@ -273,6 +296,16 @@
               "</div>" +
             "</section>" +
             '<section class="acct-section">' +
+              "<h3>Email address</h3>" +
+              '<p class="hint" id="emailChangeStatus">Your current email stays active until a new address is confirmed.</p>' +
+              '<form id="emailChangeForm">' +
+                '<div class="field"><label for="newEmail">New email</label><input id="newEmail" class="auth-input" type="email" required autocomplete="email"></div>' +
+                '<p class="error" id="emailChangeError"></p>' +
+                '<p class="ok" id="emailChangeOk"></p>' +
+                '<button class="btn btn-secondary" type="submit">Request email change</button>' +
+              "</form>" +
+            "</section>" +
+            '<section class="acct-section">' +
               "<h3>Notification Settings</h3>" +
               '<p class="hint">Optional email, WhatsApp, and SMS receipt channels. Not connected yet.</p>' +
               '<div class="acct-actions">' +
@@ -300,7 +333,7 @@
   }
 
   function showPanel(name) {
-    ["loginPanel", "signupPanel", "verifyPanel", "forgotPanel", "accountPanel"].forEach(function (id) {
+    ["loginPanel", "signupPanel", "verifyPanel", "forgotPanel", "magicPanel", "reauthPanel", "accountPanel"].forEach(function (id) {
       var el = document.getElementById(id);
       if (el) el.hidden = id !== name;
     });
@@ -815,7 +848,9 @@
     if (hash.get("error") || query.get("error")) {
       return "This email link is invalid or has already been used.";
     }
-    if (type === "signup" || type === "email" || type === "invite") {
+    if (type === "recovery") return "";
+    if (type === "magiclink") return "Sign-in link accepted.";
+    if (type === "signup" || type === "email") {
       return "Email verified. You can continue in Receipt Pilot.";
     }
     return "";
@@ -841,6 +876,148 @@
     }
   }
 
+  var reauthWait = null;
+  var magicUntil = 0;
+
+  function reauthFresh() {
+    var at = 0;
+    try { at = Number(sessionStorage.getItem("receiptly_reauth_at") || 0); } catch (e) { at = 0; }
+    return at > 0 && Date.now() - at < 5 * 60 * 1000;
+  }
+
+  function ensureReauth() {
+    if (reauthFresh()) return Promise.resolve(true);
+    showPanel("reauthPanel");
+    return new Promise(function (resolve) { reauthWait = resolve; });
+  }
+
+  async function submitReauth(ev) {
+    if (ev) ev.preventDefault();
+    var err = document.getElementById("reauthError");
+    if (err) err.textContent = "";
+    var pass = document.getElementById("reauthPass") && document.getElementById("reauthPass").value;
+    var email = sessionUser && sessionUser.email;
+    if (!email || !pass) {
+      if (err) err.textContent = "Enter your current password.";
+      return;
+    }
+    var sb = await ensureClient();
+    if (!sb) {
+      if (err) err.textContent = notConnectedMessage();
+      return;
+    }
+    var btn = document.getElementById("reauthSubmit");
+    setBusy(btn, true, "Checking…");
+    try {
+      var result = await sb.auth.signInWithPassword({ email: email, password: pass });
+      if (result.error) throw result.error;
+      try { sessionStorage.setItem("receiptly_reauth_at", String(Date.now())); } catch (e) { /* ignore */ }
+      document.getElementById("reauthForm").reset();
+      if (reauthWait) reauthWait(true);
+      reauthWait = null;
+      showPanel("accountPanel");
+    } catch (e) {
+      if (err) err.textContent = /Invalid login credentials/i.test(String(e && e.message || ""))
+        ? "That password is not correct."
+        : "Could not confirm your identity. Try again.";
+      if (reauthWait) reauthWait(false);
+      reauthWait = null;
+    } finally {
+      setBusy(btn, false, "Confirm");
+    }
+  }
+
+  function cancelReauth() {
+    if (reauthWait) reauthWait(false);
+    reauthWait = null;
+    showPanel("accountPanel");
+  }
+
+  async function sendMagic(ev) {
+    if (ev) ev.preventDefault();
+    var err = document.getElementById("magicError");
+    var ok = document.getElementById("magicOk");
+    if (err) err.textContent = "";
+    if (ok) ok.textContent = "";
+    if (Date.now() < magicUntil) {
+      if (err) err.textContent = "Please wait before requesting another link.";
+      return;
+    }
+    var email = String(document.getElementById("magicEmail").value || "").trim();
+    if (!email) {
+      if (err) err.textContent = "Enter your email.";
+      return;
+    }
+    var sb = await ensureClient();
+    if (!sb) {
+      if (err) err.textContent = notConnectedMessage();
+      return;
+    }
+    var btn = document.getElementById("magicSubmit");
+    setBusy(btn, true, "Sending…");
+    try {
+      var result = await sb.auth.signInWithOtp({
+        email: email,
+        options: { emailRedirectTo: authRedirect("/"), shouldCreateUser: false }
+      });
+      if (result.error) throw result.error;
+      magicUntil = Date.now() + 60000;
+      if (ok) ok.textContent = "If that email can sign in, a link is on its way. It is not a password reset.";
+    } catch (e) {
+      if (err) err.textContent = authErrorMessage(e);
+    } finally {
+      setBusy(btn, false, "Send sign-in link");
+    }
+  }
+
+  async function requestEmailChange(ev) {
+    if (ev) ev.preventDefault();
+    var err = document.getElementById("emailChangeError");
+    var ok = document.getElementById("emailChangeOk");
+    var status = document.getElementById("emailChangeStatus");
+    if (err) err.textContent = "";
+    if (ok) ok.textContent = "";
+    var email = String(document.getElementById("newEmail").value || "").trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      if (err) err.textContent = "Enter a valid email address.";
+      return;
+    }
+    if (sessionUser && String(sessionUser.email || "").toLowerCase() === email) {
+      if (err) err.textContent = "That is already your email address.";
+      return;
+    }
+    var fresh = await ensureReauth();
+    if (!fresh) return;
+    var sb = await ensureClient();
+    if (!sb) {
+      if (err) err.textContent = notConnectedMessage();
+      return;
+    }
+    try {
+      var result = await sb.auth.updateUser({
+        email: email,
+        options: { emailRedirectTo: authRedirect("/") }
+      });
+      if (result.error) throw result.error;
+      var current = result.data && result.data.user && result.data.user.email;
+      var pending = result.data && result.data.user && (result.data.user.new_email || result.data.user.email_change);
+      if (current && String(current).toLowerCase() === email) {
+        if (ok) ok.textContent = "Email address updated.";
+        if (status) status.textContent = "Your email address is now " + email + ".";
+      } else {
+        if (ok) ok.textContent = "Confirmation requested. Your current email remains active until the new address is confirmed.";
+        if (status) status.textContent = pending
+          ? "Confirmation pending for " + pending + ". Your current email is still active."
+          : "Confirmation pending. Your current email is still active.";
+      }
+    } catch (e) {
+      var m = String((e && e.message) || "");
+      if (/already|registered|exists/i.test(m)) {
+        if (err) err.textContent = "That email already has an account.";
+      } else if (err) err.textContent = authErrorMessage(e);
+    }
+  }
+
   function bind() {
     ensureModals();
     document.getElementById("signupForm").addEventListener("submit", register);
@@ -855,6 +1032,17 @@
       showPanel("forgotPanel");
     });
     document.getElementById("forgotToLogin").addEventListener("click", function () { showPanel("loginPanel"); });
+    document.getElementById("showMagic").addEventListener("click", function () {
+      var me = document.getElementById("magicEmail");
+      var le = document.getElementById("loginEmail");
+      if (me && le) me.value = le.value;
+      showPanel("magicPanel");
+    });
+    document.getElementById("magicForm").addEventListener("submit", sendMagic);
+    document.getElementById("magicToLogin").addEventListener("click", function () { showPanel("loginPanel"); });
+    document.getElementById("reauthForm").addEventListener("submit", submitReauth);
+    document.getElementById("reauthCancel").addEventListener("click", cancelReauth);
+    document.getElementById("emailChangeForm").addEventListener("submit", requestEmailChange);
     document.getElementById("verifyToLogin").addEventListener("click", function () { showPanel("loginPanel"); });
     document.getElementById("resendVerify").addEventListener("click", resendVerify);
     document.getElementById("copyVerifyEmail").addEventListener("click", copyVerifyEmail);
