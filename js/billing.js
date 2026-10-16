@@ -179,7 +179,8 @@
     var status = document.getElementById("billingStatus");
     var error = document.getElementById("billingError");
     if (new URLSearchParams(location.search).get("reference") && status) {
-      status.textContent = "Returned from Paystack. Access updates only after the payment is verified by the server.";
+      status.textContent = "Returned from Paystack. Checking the payment with the server.";
+      verifyReturnedPayment();
     }
     form.addEventListener("submit", async function (e) {
       e.preventDefault();
@@ -208,6 +209,37 @@
       location.href = data.authorization_url;
     });
     loadPageStatus();
+  }
+
+  async function verifyReturnedPayment() {
+    var status = document.getElementById("billingStatus");
+    var error = document.getElementById("billingError");
+    var reference = new URLSearchParams(location.search).get("reference");
+    if (!reference) return;
+    var base = worker();
+    var access = await token();
+    if (!base || !access) {
+      if (status) status.textContent = "Sign in to finish verifying this payment.";
+      return;
+    }
+    try {
+      var res = await fetch(base + "/api/billing/verify", {
+        method: "POST",
+        headers: { Authorization: "Bearer " + access, "Content-Type": "application/json" },
+        body: JSON.stringify({ reference: reference })
+      });
+      var data = await res.json();
+      if (!res.ok) {
+        if (error) error.textContent = data.error || "Payment could not be verified.";
+        return;
+      }
+      if (status) status.textContent = data.result === "processed" || data.result === "already_processed"
+        ? "Payment verified. Your subscription access is updated."
+        : "Payment check finished: " + (data.result || "not applied") + ".";
+      loadPageStatus();
+    } catch (e) {
+      if (error) error.textContent = "Payment could not be verified.";
+    }
   }
 
   async function loadPageStatus() {
