@@ -271,7 +271,7 @@
               '<form id="otpForm" hidden>' +
                 "<h3>Check your email</h3>" +
                 '<p id="otpEmailLine"></p>' +
-                '<div class="field"><label for="otpCode">Sign-in code</label><input id="otpCode" class="auth-input" inputmode="numeric" autocomplete="one-time-code" required></div>' +
+                '<div class="field"><label for="otpCode">Six-digit sign-in code</label><input id="otpCode" class="auth-input" name="one-time-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" enterkeyhint="done" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="Six-digit sign-in code" aria-describedby="otpEmailLine" required></div>' +
                 '<p class="error" id="otpError"></p>' +
                 '<p class="ok" id="otpOk"></p>' +
                 '<button class="btn btn-primary" type="submit" id="otpSubmit">Verify and sign in</button>' +
@@ -1078,9 +1078,9 @@
     var ok = document.getElementById("otpOk");
     if (err) err.textContent = "";
     if (ok) ok.textContent = "";
-    var code = String(document.getElementById("otpCode").value || "").replace(/\s+/g, "");
-    if (!pendingOtpEmail || !/^\d{6,10}$/.test(code)) {
-      if (err) err.textContent = "Enter the complete code from the email.";
+    var code = String(document.getElementById("otpCode").value || "").replace(/\D/g, "").slice(0, 6);
+    if (!pendingOtpEmail || !/^\d{6}$/.test(code)) {
+      if (err) err.textContent = "Enter the six-digit code from the email.";
       return;
     }
     var sb = await ensureClient();
@@ -1179,6 +1179,12 @@
     });
     document.getElementById("magicForm").addEventListener("submit", sendMagic);
     document.getElementById("otpForm").addEventListener("submit", verifyCode);
+    document.getElementById("otpCode").addEventListener("input", function (e) {
+      var input = e.target;
+      var digits = String(input.value || "").replace(/\D/g, "").slice(0, 6);
+      if (input.value !== digits) input.value = digits;
+      if (digits.length === 6 && !otpBusy) verifyCode();
+    });
     document.getElementById("resendOtp").addEventListener("click", function () {
       showCodeRequestStep();
       sendMagic();
@@ -1331,3 +1337,7 @@
     updateChip: updateChip
   };
 })(window);
+Create share link
+Ctrl+⇧L
+Create share link
+Ctrl+⇧L
