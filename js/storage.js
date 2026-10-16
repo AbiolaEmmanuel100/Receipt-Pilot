@@ -140,23 +140,12 @@
   }
 
   function adoptGuestBusinessIfNeeded() {
+    // Receipt claiming must not import guest business details into an account.
+    // A missing local account profile can mean the Supabase profile has not
+    // been pulled yet, so copying the guest profile here would overwrite it.
     var uid = currentUserId();
     if (!uid) return Promise.resolve(null);
-    return Promise.all([getMeta("business:" + uid, null), getMeta("business", emptyBusiness())]).then(function (parts) {
-      var owned = parts[0];
-      var guest = parts[1] || emptyBusiness();
-      if (!businessFilled(owned) && businessFilled(guest)) {
-        var copy = Object.assign({}, emptyBusiness(), guest, {
-          syncStatus: "pending",
-          updatedAt: new Date().toISOString()
-        });
-        return setMeta("business:" + uid, copy).then(function () {
-          return setMeta("business", emptyBusiness()).then(function () { return copy; });
-        });
-      }
-      if (businessFilled(owned) && businessFilled(guest)) {
-        return setMeta("business", emptyBusiness()).then(function () { return owned; });
-      }
+    return getMeta("business:" + uid, null).then(function (owned) {
       return owned || emptyBusiness();
     });
   }
