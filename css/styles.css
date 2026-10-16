@@ -986,3 +986,16 @@ textarea { min-height: 80px; resize: vertical; }
 .billing-plan:has(input:checked) { border-color: var(--brand); background: var(--brand-light, #ecfdf5); }
 .billing-card .btn { width: 100%; min-height: 44px; margin-top: 8px; }
 .billing-card .error { color: var(--danger); min-height: 1.2em; margin: 8px 0; }
+
+.verify-icon {
+  width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 50%;
+  background: #dcfce7; color: #15803d; display: grid; place-items: center;
+  font-size: 28px; font-weight: 800;
+}
+.verify-box {
+  background: #f8fafc; border: 1px solid var(--line); border-radius: 12px;
+  padding: 12px 14px; margin: 12px 0 16px; text-align: left;
+}
+.verify-box strong { display: block; margin-bottom: 4px; }
+.verify-box p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.verify-gmail { width: 100%; min-height: 44px; margin-bottom: 10px; }
