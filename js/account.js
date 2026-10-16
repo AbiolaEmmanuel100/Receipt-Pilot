@@ -465,12 +465,6 @@
         await ReceiptlyStorage.saveReceipt(rows[i]);
       }
     }
-    if (ReceiptlyStorage.adoptGuestBusinessIfNeeded) {
-      await ReceiptlyStorage.adoptGuestBusinessIfNeeded();
-    } else {
-      var biz = await ReceiptlyStorage.getBusiness();
-      if (biz) await ReceiptlyStorage.saveBusiness(biz);
-    }
     if (ReceiptlyStorage.catchUpSequence) await ReceiptlyStorage.catchUpSequence();
     if (global.ReceiptlySync) await ReceiptlySync.sync();
     if (global.ReceiptlyUI) ReceiptlyUI.toast("Receipts synced to your account.");
