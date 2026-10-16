@@ -106,6 +106,65 @@
     return now > new Date(u.trialEndsAt).getTime();
   }
 
+  function loginPreference() {
+    try {
+      return localStorage.getItem("receiptly_login_pref") === "returning" ? "magic" : "password";
+    } catch (e) {
+      return "password";
+    }
+  }
+
+  function rememberedEmail() {
+    try {
+      var email = String(localStorage.getItem("receiptly_remember_email") || "").trim();
+      return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? email : "";
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function prefillRememberedEmail() {
+    var email = rememberedEmail();
+    if (!email) return;
+    ["magicEmail", "loginEmail"].forEach(function (id) {
+      var input = document.getElementById(id);
+      if (input && !input.value) input.value = email;
+    });
+    var magicBox = document.getElementById("rememberMagicEmail");
+    var passBox = document.getElementById("rememberLoginEmail");
+    if (magicBox) magicBox.checked = true;
+    if (passBox) passBox.checked = true;
+  }
+
+  function noteSuccessfulSignIn(email) {
+    try { localStorage.setItem("receiptly_login_pref", "returning"); } catch (e) { /* preference only */ }
+    var magicBox = document.getElementById("rememberMagicEmail");
+    var passBox = document.getElementById("rememberLoginEmail");
+    var box = magicBox && document.getElementById("magicLogin") && !document.getElementById("magicLogin").hidden
+      ? magicBox : passBox;
+    try {
+      if (box && box.checked && email) localStorage.setItem("receiptly_remember_email", email);
+      else if (box) localStorage.removeItem("receiptly_remember_email");
+    } catch (e) { /* ignore */ }
+  }
+
+  function showLoginMode(mode) {
+    var magic = document.getElementById("magicLogin");
+    var password = document.getElementById("passwordLogin");
+    if (magic) magic.hidden = mode !== "magic";
+    if (password) password.hidden = mode !== "password";
+    if (mode === "password") {
+      var magicEmail = document.getElementById("magicEmail");
+      var loginEmail = document.getElementById("loginEmail");
+      if (loginEmail && magicEmail && magicEmail.value && !loginEmail.value) loginEmail.value = magicEmail.value;
+    }
+    if (mode === "magic") {
+      var fromPassword = document.getElementById("loginEmail");
+      var toMagic = document.getElementById("magicEmail");
+      if (toMagic && fromPassword && fromPassword.value && !toMagic.value) toMagic.value = fromPassword.value;
+    }
+  }
+
   function show(id, on) {
     var el = document.getElementById(id);
     if (el) el.hidden = !on;
@@ -194,19 +253,34 @@
     wrap.innerHTML =
       '<div class="save-dialog" id="authDialog" hidden>' +
         '<div class="card auth-card">' +
-          '<div class="auth-brand"><a class="logo" href="index.html">Receipt<span>ly</span></a>' +
+          '<div class="auth-brand"><a class="logo" href="index.html">Receipt <span>Pilot</span></a>' +
           "<p>Simple receipts. Organized records.</p></div>" +
 
           '<div id="loginPanel">' +
-            "<h2>Log in</h2>" +
-            '<form id="loginForm">' +
-              authField("loginEmail", "Email", "email", "email") +
-              pwField("loginPass", "Password", "current-password") +
-              '<p><button type="button" class="auth-link" id="forgotPass">Forgot password?</button></p>' +
-              '<p><button type="button" class="auth-link" id="showMagic">Email me a sign-in link</button></p>' +
-              '<p class="error" id="loginError"></p>' +
-              '<button class="btn btn-primary" type="submit" id="loginSubmit">Log in</button>' +
-            "</form>" +
+            "<h2>Welcome back</h2>" +
+            '<p class="hint auth-intro">Sign in securely to access your saved receipts.</p>' +
+            '<div id="magicLogin" hidden>' +
+              '<form id="magicForm">' +
+                '<div class="field"><label for="magicEmail">Email address</label><input id="magicEmail" class="auth-input" type="email" required autocomplete="email"></div>' +
+                '<p class="error" id="magicError"></p>' +
+                '<p class="ok" id="magicOk"></p>' +
+                '<label class="hint"><input type="checkbox" id="rememberMagicEmail"> Remember this email on this browser</label>' +
+                '<button class="btn btn-primary" type="submit" id="magicSubmit">Email me a sign-in link</button>' +
+              "</form>" +
+              '<p class="hint">We\'ll send a secure sign-in link to your email address.</p>' +
+              '<p class="auth-switch">Prefer using a password? <button type="button" id="showPasswordLogin">Log in with password</button></p>' +
+            "</div>" +
+            '<div id="passwordLogin">' +
+              '<form id="loginForm">' +
+                authField("loginEmail", "Email address", "email", "email") +
+                pwField("loginPass", "Password", "current-password") +
+                '<p><button type="button" class="auth-link" id="forgotPass">Forgot password?</button></p>' +
+                '<p class="error" id="loginError"></p>' +
+                '<label class="hint"><input type="checkbox" id="rememberLoginEmail"> Remember this email on this browser</label>' +
+                '<button class="btn btn-primary" type="submit" id="loginSubmit">Log in</button>' +
+              "</form>" +
+              '<p class="auth-switch"><button type="button" id="showMagic">Sign in with a magic link</button></p>' +
+            "</div>" +
             '<p class="auth-switch">Don\'t have an account? <button type="button" id="showSignup">Create account</button></p>' +
           "</div>" +
 
@@ -239,18 +313,6 @@
             '<p class="error" id="verifyError"></p>' +
             '<button class="btn btn-secondary" type="button" id="resendVerify">Resend confirmation email</button>' +
             '<p class="auth-switch"><button type="button" id="verifyToLogin">Back to log in</button></p>' +
-          "</div>" +
-
-          '<div id="magicPanel" hidden>' +
-            "<h2>Email sign-in link</h2>" +
-            "<p>Enter your email and we will send a one-time sign-in link. This is not a password reset.</p>" +
-            '<form id="magicForm">' +
-              '<div class="field"><label for="magicEmail">Email</label><input id="magicEmail" class="auth-input" type="email" required autocomplete="email"></div>' +
-              '<p class="error" id="magicError"></p>' +
-              '<p class="ok" id="magicOk"></p>' +
-              '<button class="btn btn-primary" type="submit" id="magicSubmit">Send sign-in link</button>' +
-            "</form>" +
-            '<p class="auth-switch"><button type="button" id="magicToLogin">Back to log in</button></p>' +
           "</div>" +
 
           '<div id="reauthPanel" hidden>' +
@@ -333,11 +395,15 @@
   }
 
   function showPanel(name) {
-    ["loginPanel", "signupPanel", "verifyPanel", "forgotPanel", "magicPanel", "reauthPanel", "accountPanel"].forEach(function (id) {
+    ["loginPanel", "signupPanel", "verifyPanel", "forgotPanel", "reauthPanel", "accountPanel"].forEach(function (id) {
       var el = document.getElementById(id);
       if (el) el.hidden = id !== name;
     });
-    if (name === "loginPanel" && !userId()) resetLoginForm();
+    if (name === "loginPanel" && !userId()) {
+      resetLoginForm();
+      showLoginMode(loginPreference());
+      prefillRememberedEmail();
+    }
     if (name === "signupPanel" && !userId()) resetSignupForm();
     show("authDialog", true);
   }
@@ -409,6 +475,7 @@
       businessName: (userObj.user_metadata && userObj.user_metadata.business_name) || "",
       lastSignIn: userObj.last_sign_in_at || ""
     };
+    noteSuccessfulSignIn(userObj.email || "");
     await ReceiptlyStorage.setMeta("lastUserId", userObj.id);
     if (ReceiptlyStorage.adoptGuestBusinessIfNeeded) {
       await ReceiptlyStorage.adoptGuestBusinessIfNeeded();
@@ -944,8 +1011,8 @@
       return;
     }
     var email = String(document.getElementById("magicEmail").value || "").trim();
-    if (!email) {
-      if (err) err.textContent = "Enter your email.";
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      if (err) err.textContent = "Enter a valid email address.";
       return;
     }
     var sb = await ensureClient();
@@ -962,11 +1029,11 @@
       });
       if (result.error) throw result.error;
       magicUntil = Date.now() + 60000;
-      if (ok) ok.textContent = "If that email can sign in, a link is on its way. It is not a password reset.";
+      if (ok) ok.textContent = "Request accepted. Check that inbox for the sign-in link. This does not confirm the email was delivered, and it is not a password reset.";
     } catch (e) {
       if (err) err.textContent = authErrorMessage(e);
     } finally {
-      setBusy(btn, false, "Send sign-in link");
+      setBusy(btn, false, "Email me a sign-in link");
     }
   }
 
@@ -1032,14 +1099,9 @@
       showPanel("forgotPanel");
     });
     document.getElementById("forgotToLogin").addEventListener("click", function () { showPanel("loginPanel"); });
-    document.getElementById("showMagic").addEventListener("click", function () {
-      var me = document.getElementById("magicEmail");
-      var le = document.getElementById("loginEmail");
-      if (me && le) me.value = le.value;
-      showPanel("magicPanel");
-    });
+    document.getElementById("showPasswordLogin").addEventListener("click", function () { showLoginMode("password"); });
+    document.getElementById("showMagic").addEventListener("click", function () { showLoginMode("magic"); });
     document.getElementById("magicForm").addEventListener("submit", sendMagic);
-    document.getElementById("magicToLogin").addEventListener("click", function () { showPanel("loginPanel"); });
     document.getElementById("reauthForm").addEventListener("submit", submitReauth);
     document.getElementById("reauthCancel").addEventListener("click", cancelReauth);
     document.getElementById("emailChangeForm").addEventListener("submit", requestEmailChange);
