@@ -69,10 +69,15 @@
     return false;
   }
 
+  function daysLeft(u) {
+    if (!u || !u.trialEndsAt) return null;
+    return Math.ceil((new Date(u.trialEndsAt).getTime() - Date.now()) / 86400000);
+  }
+
   function canPersist() {
     if (loggedIn()) {
       var u = global.ReceiptlyAccount && ReceiptlyAccount.user && ReceiptlyAccount.user();
-      if (!u || (!u.trialEndsAt && !u.subscriptionExpiresAt)) return true;
+      if (!u || !u.entitlementChecked) return true;
       return entitled(u);
     }
     initGuestSession();
@@ -101,7 +106,7 @@
     gate.hidden = true;
     gate.innerHTML =
       '<div class="card auth-card">' +
-        '<div class="auth-brand"><a class="logo" href="index.html">Receipt-<span>Pilot</span></a></div>' +
+        '<div class="auth-brand"><a class="logo" href="index.html">Receipt <span>Pilot</span></a></div>' +
         "<h2>Create a free account to continue</h2>" +
         "<p>You've used Receipt Pilot on this device before. Sign up or log in to keep saving receipts. Existing receipts on this device are not deleted.</p>" +
         '<div class="actions-bar" style="justify-content:center">' +
@@ -110,6 +115,38 @@
         "</div>" +
       "</div>";
     document.body.appendChild(gate);
+
+    var paywall = document.createElement("div");
+    paywall.className = "save-dialog paywall";
+    paywall.id = "trialPaywall";
+    paywall.hidden = true;
+    paywall.setAttribute("role", "dialog");
+    paywall.setAttribute("aria-modal", "true");
+    paywall.setAttribute("aria-labelledby", "paywallTitle");
+    paywall.innerHTML =
+      '<div class="card billing-card">' +
+        '<div class="auth-brand"><a class="logo" href="index.html">Receipt <span>Pilot</span></a></div>' +
+        '<h2 id="paywallTitle">Your free trial has ended</h2>' +
+        '<p id="paywallCopy">Your 14-day free trial is over. Choose a plan to restore access to your Receipt Pilot workspace and protected online records.</p>' +
+        '<p class="hint">Saved receipts are kept. Access returns after the payment is verified by the server. This screen cannot be dismissed to restore access.</p>' +
+        '<ul class="paywall-plans">' +
+          "<li>Monthly — ₦1,500</li>" +
+          "<li>Quarterly — ₦4,275</li>" +
+          "<li>Semi-annual — ₦8,100</li>" +
+          "<li>Annual — ₦15,300</li>" +
+        "</ul>" +
+        '<button type="button" class="btn btn-primary" id="paywallPlans">Choose a plan</button>' +
+        '<button type="button" class="btn btn-secondary" id="paywallSignOut">Sign out</button>' +
+        '<p class="hint"><a href="privacy-policy.html">Privacy</a> · <a href="terms.html">Terms</a></p>' +
+      "</div>";
+    document.body.appendChild(paywall);
+    document.getElementById("paywallPlans").addEventListener("click", function () {
+      if (global.ReceiptlyBilling && ReceiptlyBilling.open) ReceiptlyBilling.open();
+      else location.href = "billing.html";
+    });
+    document.getElementById("paywallSignOut").addEventListener("click", function () {
+      if (global.ReceiptlyAccount && ReceiptlyAccount.logout) ReceiptlyAccount.logout();
+    });
 
     document.getElementById("usageBannerSignup").addEventListener("click", function () {
       banner.hidden = true;
@@ -128,12 +165,21 @@
     });
   }
 
+  function showPaywall(message) {
+    ensureUi();
+    var paywall = document.getElementById("trialPaywall");
+    var copy = document.getElementById("paywallCopy");
+    if (copy && message) copy.textContent = message;
+    if (paywall) paywall.hidden = false;
+  }
+
   function showGate() {
     if (loggedIn()) {
       var u = global.ReceiptlyAccount && ReceiptlyAccount.user && ReceiptlyAccount.user();
-      if (u && !entitled(u) && (u.trialEndsAt || u.subscriptionExpiresAt)) {
-        if (global.ReceiptlyBilling && ReceiptlyBilling.open) ReceiptlyBilling.open();
-        else location.href = "billing.html";
+      if (u && u.entitlementChecked && !entitled(u)) {
+        showPaywall(u.trialEndsAt || u.subscriptionExpiresAt
+          ? "Your 14-day free trial is over. Choose a plan to restore access to your Receipt Pilot workspace and protected online records."
+          : "We could not confirm an active trial. Existing dates are not reset, and a new trial is not created. Choose a plan to continue.");
       }
       return false;
     }
@@ -144,45 +190,44 @@
     return true;
   }
 
-  function showSixtyOrNinety() {
+  function showTrialBanner() {
     if (!loggedIn()) return;
     var u = global.ReceiptlyAccount && ReceiptlyAccount.user && ReceiptlyAccount.user();
-    if (!u) return;
-    if (u.subscriptionStatus === "active") return;
+    if (!u || !u.entitlementChecked) return;
     ensureUi();
     var banner = document.getElementById("usageBanner");
     var text = document.getElementById("usageBannerText");
-    var dismiss = document.getElementById("usageBannerDismiss");
     var signup = document.getElementById("usageBannerSignup");
+    var dismiss = document.getElementById("usageBannerDismiss");
     if (!banner || !text) return;
-
-    if (global.ReceiptlyAccount.trialExpired && ReceiptlyAccount.trialExpired(u)) {
-      text.textContent = "Your free period has ended. Subscribe to continue using Receipt Pilot. Existing receipts are kept and return after a verified payment.";
-      if (signup) {
-        signup.hidden = false;
-        signup.textContent = "View plans";
-        signup.onclick = function () {
-          if (global.ReceiptlyBilling && ReceiptlyBilling.open) ReceiptlyBilling.open();
-          else location.href = "billing.html";
-        };
-      }
-      banner.hidden = false;
+    banner.classList.remove("usage-banner-warn");
+    if (!entitled(u)) {
+      showPaywall();
+      banner.hidden = true;
       return;
     }
-
-    if (!u.trialEndsAt) return;
-    var end = new Date(u.trialEndsAt).getTime();
-    var start = end - 90 * 86400000;
-    var elapsed = Math.floor((Date.now() - start) / 86400000);
-    if (elapsed < 60) return;
-    if (localStorage.getItem("receiptly_60_banner") === today()) return;
-    text.textContent = "You are more than 60 days into your 90-day free period. Create backups and keep using Receipt Pilot as usual.";
-    if (signup) signup.hidden = true;
-    banner.hidden = false;
-    if (dismiss) dismiss.onclick = function () {
+    var paywall = document.getElementById("trialPaywall");
+    if (paywall) paywall.hidden = true;
+    if (u.subscriptionStatus === "active" && u.subscriptionExpiresAt && Date.now() < new Date(u.subscriptionExpiresAt).getTime()) {
       banner.hidden = true;
-      localStorage.setItem("receiptly_60_banner", today());
-    };
+      return;
+    }
+    var left = daysLeft(u);
+    if (left === null) return;
+    text.textContent = left <= 1
+      ? "Your free trial ends in " + left + " day."
+      : "Your free trial ends in " + left + " days.";
+    if (left <= 3) banner.classList.add("usage-banner-warn");
+    if (signup) {
+      signup.hidden = false;
+      signup.textContent = "View plans";
+      signup.onclick = function () {
+        if (global.ReceiptlyBilling && ReceiptlyBilling.open) ReceiptlyBilling.open();
+        else location.href = "billing.html";
+      };
+    }
+    if (dismiss) dismiss.hidden = left <= 3;
+    banner.hidden = false;
   }
 
   function boot() {
@@ -190,7 +235,7 @@
     if (global.ReceiptlyAccount && ReceiptlyAccount.ready) {
       ReceiptlyAccount.ready.then(function () {
         if (loggedIn()) {
-          showSixtyOrNinety();
+          showTrialBanner();
           return;
         }
         initGuestSession();
@@ -211,6 +256,7 @@
     }
   }
 
+  document.addEventListener("receiptly-auth-change", showTrialBanner);
   document.addEventListener("DOMContentLoaded", boot);
 
   global.ReceiptlyUsage = {
