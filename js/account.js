@@ -148,11 +148,18 @@
           "</div>" +
 
           '<div id="verifyPanel" hidden>' +
+            '<div class="verify-icon" aria-hidden="true">✓</div>' +
             "<h2>Check your email</h2>" +
-            '<p id="verifyCopy">Account created. Please check your email and click the verification link before logging in.</p>' +
+            '<p id="verifyCopy">Your Receipt Pilot account has been created. We\'ve sent you a confirmation link to verify your email address.</p>' +
+            '<div class="verify-box">' +
+              '<strong>Check your inbox</strong>' +
+              '<p id="verifyEmail">Open the email from Receipt Pilot and click the confirmation link.</p>' +
+            "</div>" +
+            '<a class="btn btn-primary verify-gmail" href="https://mail.google.com/" target="_blank" rel="noopener noreferrer">Open Gmail</a>' +
+            '<p class="hint">Gmail is only a shortcut. You can open the message in any email provider. Check your spam or junk folder if you do not see it.</p>' +
             '<p class="ok" id="verifyOk"></p>' +
             '<p class="error" id="verifyError"></p>' +
-            '<button class="btn btn-primary" type="button" id="resendVerify">Resend verification email</button>' +
+            '<button class="btn btn-secondary" type="button" id="resendVerify">Resend confirmation email</button>' +
             '<p class="auth-switch"><button type="button" id="verifyToLogin">Back to log in</button></p>' +
           "</div>" +
 
@@ -431,12 +438,17 @@
       if (result.error) throw result.error;
       pendingVerifyEmail = email;
       if (result.data && result.data.session) {
-        try { await sb.auth.signOut(); } catch (e) { /* wait for email verify */ }
+        resetSignupForm();
+        show("authDialog", false);
+        if (global.ReceiptlyUI) ReceiptlyUI.toast("You are signed in.");
+        return;
       }
       var copy = document.getElementById("verifyCopy");
       if (copy) {
-        copy.textContent = "Account created. Please check your email and click the verification link before logging in.";
+        copy.textContent = "Your Receipt Pilot account has been created. We've sent a confirmation link to verify your email address.";
       }
+      var emailLine = document.getElementById("verifyEmail");
+      if (emailLine) emailLine.textContent = "Open the email sent to " + email + " and click the confirmation link.";
       document.getElementById("verifyOk").textContent = "";
       document.getElementById("verifyError").textContent = "";
       showPanel("verifyPanel");
@@ -641,15 +653,38 @@
       ok.textContent = "If that email has an account, a reset link is on its way.";
       if (global.ReceiptlyUI) ReceiptlyUI.toast("Password reset email sent.");
     } catch (e) {
-      err.textContent = ReceiptlyCloud.friendlyError(e);
+      err.textContent = authErrorMessage(e);
     }
+  }
+
+  var resendUntil = 0;
+  var resendTimer = null;
+  var resendBusy = false;
+
+  function authErrorMessage(err) {
+    var status = err && (err.status || err.code || "");
+    var m = String((err && (err.message || err.error_description)) || err || "");
+    if (global.ReceiptlyErrors && ReceiptlyErrors.report) {
+      ReceiptlyErrors.report(("auth " + status + " " + m).replace(/https?:\/\/\S+/g, "[url]").slice(0, 160), "auth");
+    }
+    if (/rate limit|too many/i.test(m)) return "Too many attempts. Please wait a moment and try again.";
+    if (/Failed to fetch|NetworkError|network/i.test(m)) return "Unable to reach Receipt Pilot right now. Check your connection and try again.";
+    if (/redirect|not allowed/i.test(m)) return "The reset link could not be prepared. Check the site address and try again.";
+    if (/invalid email|email address/i.test(m)) return "Enter a valid email address.";
+    if (global.ReceiptlyCloud && ReceiptlyCloud.friendlyError) return ReceiptlyCloud.friendlyError(err);
+    return "Unable to complete that right now. Please try again.";
   }
 
   async function resendVerify() {
     var err = document.getElementById("verifyError");
     var ok = document.getElementById("verifyOk");
+    var btn = document.getElementById("resendVerify");
     err.textContent = "";
     ok.textContent = "";
+    if (resendBusy || Date.now() < resendUntil) {
+      err.textContent = "Please wait before requesting another email.";
+      return;
+    }
     var email = pendingVerifyEmail || (document.getElementById("accEmail") && document.getElementById("accEmail").value) ||
       (document.getElementById("loginEmail") && document.getElementById("loginEmail").value) || "";
     email = String(email).trim();
@@ -657,23 +692,56 @@
       err.textContent = "Enter your email on the login screen first.";
       return;
     }
-    var sb = await ensureClient();
-    if (!sb) {
-      err.textContent = notConnectedMessage();
-      return;
+    resendBusy = true;
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Sending…";
     }
     try {
+      var sb = await ensureClient();
+      if (!sb) {
+        err.textContent = notConnectedMessage();
+        return;
+      }
       var result = await sb.auth.resend({
         type: "signup",
         email: email,
         options: { emailRedirectTo: authRedirect("/") }
       });
       if (result.error) throw result.error;
-      ok.textContent = "Verification email resent. Check your inbox.";
-      if (global.ReceiptlyUI) ReceiptlyUI.toast("Verification email resent.");
+      ok.textContent = "Confirmation email sent. Check your inbox and spam folder.";
+      if (global.ReceiptlyUI) ReceiptlyUI.toast("Confirmation email sent.");
+      startResendCooldown();
     } catch (e) {
-      err.textContent = ReceiptlyCloud.friendlyError(e);
+      err.textContent = authErrorMessage(e);
+    } finally {
+      resendBusy = false;
+      if (btn && Date.now() >= resendUntil) {
+        btn.disabled = false;
+        btn.textContent = "Resend confirmation email";
+      }
     }
+  }
+
+  function startResendCooldown() {
+    var btn = document.getElementById("resendVerify");
+    resendUntil = Date.now() + 60000;
+    if (resendTimer) clearInterval(resendTimer);
+    function tick() {
+      var left = Math.ceil((resendUntil - Date.now()) / 1000);
+      if (!btn) return;
+      if (left <= 0) {
+        btn.disabled = false;
+        btn.textContent = "Resend confirmation email";
+        clearInterval(resendTimer);
+        resendTimer = null;
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = "Resend available in " + left + "s";
+    }
+    tick();
+    resendTimer = setInterval(tick, 1000);
   }
 
   function authCallbackMessage() {
