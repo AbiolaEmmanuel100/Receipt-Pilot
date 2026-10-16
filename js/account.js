@@ -119,7 +119,7 @@
     wrap.innerHTML =
       '<div class="save-dialog" id="authDialog" hidden>' +
         '<div class="card auth-card">' +
-          '<div class="auth-brand"><a class="logo" href="index.html">Receipt<span>ly</span></a>' +
+          '<div class="auth-brand"><a class="logo" href="index.html">Receipt-<span>Pilot</span></a>' +
           "<p>Simple receipts. Organized records.</p></div>" +
 
           '<div id="loginPanel">' +
