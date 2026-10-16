@@ -269,7 +269,7 @@
     var user = uid();
     if (!client || !user || !online()) return;
     var biz = await ReceiptlyStorage.getBusiness();
-    if (!biz) return;
+    if (!biz || biz.syncStatus !== "pending") return;
     var row = {
       user_id: user,
       business_name: biz.name || "",
