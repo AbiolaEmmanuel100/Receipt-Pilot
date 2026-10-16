@@ -10,6 +10,81 @@
   function userId() { return sessionUser && sessionUser.id; }
   function token() { return sessionUser ? "session" : ""; }
 
+  function isGmailAddress(email) {
+    return /@(gmail|googlemail)\.com$/i.test(String(email || "").trim());
+  }
+
+  function gmailChooserUrl(email) {
+    var address = String(email || "").trim();
+    return "https://accounts.google.com/AccountChooser?Email=" + encodeURIComponent(address) +
+      "&continue=" + encodeURIComponent("https://mail.google.com/mail/");
+  }
+
+  function showVerifyPanel(email, intro) {
+    email = String(email || "").trim();
+    if (email) pendingVerifyEmail = email;
+    var copy = document.getElementById("verifyCopy");
+    if (copy) {
+      copy.textContent = intro || "Your Receipt Pilot account has been created. We've sent a confirmation link to verify your email address.";
+    }
+    var address = document.getElementById("verifyAddress");
+    if (address) address.textContent = email;
+    var emailLine = document.getElementById("verifyEmail");
+    if (emailLine) {
+      emailLine.textContent = email
+        ? "Open the inbox for " + email + " and click the confirmation link from Receipt Pilot."
+        : "Open the email from Receipt Pilot and click the confirmation link.";
+    }
+    var gmail = document.getElementById("openGmail");
+    var note = document.getElementById("verifyGmailNote");
+    if (gmail) {
+      if (isGmailAddress(email)) {
+        gmail.hidden = false;
+        gmail.href = gmailChooserUrl(email);
+        gmail.textContent = "Open Gmail for this address";
+      } else {
+        gmail.hidden = true;
+        gmail.removeAttribute("href");
+      }
+    }
+    if (note) {
+      note.textContent = isGmailAddress(email)
+        ? "If Gmail opens a different account, switch to " + email + ". Google may open the account already signed in on this browser. You can also open this address in any email app. Check spam or junk if you do not see it."
+        : "Open this address in your email app. Check spam or junk if you do not see the message.";
+    }
+    var ok = document.getElementById("verifyOk");
+    var errEl = document.getElementById("verifyError");
+    if (ok) ok.textContent = "";
+    if (errEl) errEl.textContent = "";
+    showPanel("verifyPanel");
+  }
+
+  async function copyVerifyEmail() {
+    var email = String(pendingVerifyEmail || "").trim();
+    var ok = document.getElementById("verifyOk");
+    var err = document.getElementById("verifyError");
+    if (ok) ok.textContent = "";
+    if (err) err.textContent = "";
+    if (!email) {
+      if (err) err.textContent = "No email address is available to copy.";
+      return;
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(email);
+      } else {
+        var input = document.createElement("input");
+        input.value = email;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        input.parentNode.removeChild(input);
+      }
+      if (ok) ok.textContent = "Copied " + email + ".";
+    } catch (e) {
+      if (err) err.textContent = "Could not copy the email. Select " + email + " and copy it manually.";
+    }
+  }
   function isVerified(u) {
     if (!u) return false;
     return !!(u.email_confirmed_at || u.confirmed_at);
@@ -119,7 +194,7 @@
     wrap.innerHTML =
       '<div class="save-dialog" id="authDialog" hidden>' +
         '<div class="card auth-card">' +
-          '<div class="auth-brand"><a class="logo" href="index.html">Receipt-<span>Pilot</span></a>' +
+          '<div class="auth-brand"><a class="logo" href="index.html">Receipt<span>ly</span></a>' +
           "<p>Simple receipts. Organized records.</p></div>" +
 
           '<div id="loginPanel">' +
@@ -152,11 +227,13 @@
             "<h2>Check your email</h2>" +
             '<p id="verifyCopy">Your Receipt Pilot account has been created. We\'ve sent you a confirmation link to verify your email address.</p>' +
             '<div class="verify-box">' +
-              '<strong>Check your inbox</strong>' +
+              '<strong>Check this inbox</strong>' +
+              '<p id="verifyAddress"></p>' +
               '<p id="verifyEmail">Open the email from Receipt Pilot and click the confirmation link.</p>' +
             "</div>" +
-            '<a class="btn btn-primary verify-gmail" href="https://mail.google.com/" target="_blank" rel="noopener noreferrer">Open Gmail</a>' +
-            '<p class="hint">Gmail is only a shortcut. You can open the message in any email provider. Check your spam or junk folder if you do not see it.</p>' +
+            '<a class="btn btn-primary verify-gmail" id="openGmail" href="https://accounts.google.com/AccountChooser" target="_blank" rel="noopener noreferrer" hidden>Open Gmail</a>' +
+            '<button class="btn btn-secondary" type="button" id="copyVerifyEmail">Copy email address</button>' +
+            '<p class="hint" id="verifyGmailNote">Gmail is only a shortcut. You can open the message in any email provider. Check your spam or junk folder if you do not see it.</p>' +
             '<p class="ok" id="verifyOk"></p>' +
             '<p class="error" id="verifyError"></p>' +
             '<button class="btn btn-secondary" type="button" id="resendVerify">Resend confirmation email</button>' +
@@ -290,11 +367,7 @@
       if (sb) {
         try { await sb.auth.signOut(); } catch (e) { /* ignore */ }
       }
-      var copy = document.getElementById("verifyCopy");
-      if (copy) {
-        copy.textContent = "Please check your email and click the verification link before logging in.";
-      }
-      showPanel("verifyPanel");
+      showVerifyPanel(userObj.email || pendingVerifyEmail, "Please check your email and click the verification link before logging in.");
       return;
     }
     sessionUser = {
@@ -443,16 +516,8 @@
         if (global.ReceiptlyUI) ReceiptlyUI.toast("You are signed in.");
         return;
       }
-      var copy = document.getElementById("verifyCopy");
-      if (copy) {
-        copy.textContent = "Your Receipt Pilot account has been created. We've sent a confirmation link to verify your email address.";
-      }
-      var emailLine = document.getElementById("verifyEmail");
-      if (emailLine) emailLine.textContent = "Open the email sent to " + email + " and click the confirmation link.";
-      document.getElementById("verifyOk").textContent = "";
-      document.getElementById("verifyError").textContent = "";
-      showPanel("verifyPanel");
       resetSignupForm();
+      showVerifyPanel(email);
       if (global.ReceiptlyUI) ReceiptlyUI.toast("Check your email to verify your account.");
     } catch (e) {
       err.textContent = ReceiptlyCloud.friendlyError(e);
@@ -485,7 +550,7 @@
         try { await sb.auth.signOut(); } catch (e) { /* ignore */ }
         onSignedOut();
         resetLoginForm();
-        showPanel("verifyPanel");
+        showVerifyPanel(email, "Please check your email and click the verification link before logging in.");
         return;
       }
       resetLoginForm();
@@ -798,6 +863,7 @@
     document.getElementById("forgotToLogin").addEventListener("click", function () { showPanel("loginPanel"); });
     document.getElementById("verifyToLogin").addEventListener("click", function () { showPanel("loginPanel"); });
     document.getElementById("resendVerify").addEventListener("click", resendVerify);
+    document.getElementById("copyVerifyEmail").addEventListener("click", copyVerifyEmail);
     document.getElementById("authClose").addEventListener("click", function () { show("authDialog", false); });
     var doLogout = document.getElementById("doLogout");
     if (doLogout) doLogout.addEventListener("click", logout);
