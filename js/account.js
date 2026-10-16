@@ -447,9 +447,12 @@
         sessionUser.renewalMode = sub.data && sub.data.renewal_mode;
         sessionUser.deletionRequestedAt = prof.data && prof.data.deletion_requested_at;
         sessionUser.purgeAfter = prof.data && prof.data.purge_after;
+        sessionUser.entitlementChecked = true;
       }
       await sb.from("usage").update({ last_active_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("user_id", uid);
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      if (sessionUser) sessionUser.entitlementChecked = true;
+    }
   }
 
   var signInJob = null;
@@ -1337,7 +1340,3 @@
     updateChip: updateChip
   };
 })(window);
-Create share link
-Ctrl+⇧L
-Create share link
-Ctrl+⇧L
