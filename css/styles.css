@@ -681,19 +681,58 @@ textarea { min-height: 80px; resize: vertical; }
 .auth-card .error { color: var(--danger); min-height: 1.2em; margin: 8px 0; font-size: 0.88rem; }
 .auth-card .ok { color: #166534; font-size: 0.88rem; margin: 8px 0; }
 .usage-banner {
-  background: #ecfdf5;
-  border-bottom: 1px solid #a7f3d0;
+  background: #f0fdfa;
+  border-bottom: 1px solid #99f6e4;
   color: #134e4a;
-  padding: 10px 16px;
+  padding: 16px;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 16px;
   align-items: center;
   justify-content: space-between;
 }
 .usage-banner[hidden] { display: none !important; }
-.usage-banner p { margin: 0; font-size: 0.92rem; }
+.trial-count { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; min-width: 0; }
+.trial-count-title { margin: 0 0 4px; font-size: 1rem; font-weight: 800; }
+.trial-count-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+.trial-count-grid { display: flex; gap: 8px; }
+.trial-count-unit {
+  min-width: 72px;
+  background: #fff;
+  border: 1px solid #99f6e4;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  text-align: center;
+  padding: 8px 6px;
+}
+.trial-count-unit strong {
+  display: block;
+  font-size: 1.6rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+.trial-count-unit span {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.usage-banner-actions { display: flex; gap: 8px; align-items: center; }
 .usage-banner-warn { background: #fff7ed; border-bottom-color: #fdba74; color: #9a3412; }
+.usage-banner-warn .trial-count-unit { border-color: #fdba74; }
+@media (max-width: 640px) {
+  .trial-count-unit { min-width: 64px; }
+  .trial-count-unit strong { font-size: 1.3rem; }
+}
 .paywall { background: rgba(15, 23, 42, 0.72); }
 .paywall-plans { margin: 12px 0; padding-left: 18px; text-align: left; }
 .share-card { width: min(94vw, 440px) !important; max-height: 90vh; overflow: auto; }
