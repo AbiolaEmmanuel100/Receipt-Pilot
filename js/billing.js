@@ -90,6 +90,17 @@
     return FALLBACK_PLANS.slice();
   }
 
+  function trialEndFrom(data) {
+    if (!data) return "";
+    return data.trial_ends_at || data.trialEndsAt || "";
+  }
+
+  function formatTrialDate(value) {
+    var date = new Date(value);
+    if (!value || isNaN(date.getTime())) return "";
+    return date.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
+  }
+
   function render(plans) {
     var box = document.getElementById("billingPlans");
     var status = document.getElementById("billingModalStatus");
@@ -99,12 +110,18 @@
     if (!statusData || statusData.signedOut) {
       status.textContent = "Sign in from Account before choosing a plan.";
       if (checkout) checkout.disabled = true;
+    } else if (statusData.loadError) {
+      status.textContent = "Subscription status could not be loaded.";
+      if (checkout) checkout.disabled = true;
     } else {
-      var trial = statusData.trial_ends_at ? new Date(statusData.trial_ends_at).toLocaleDateString() : "not set";
+      var trialValue = trialEndFrom(statusData);
+      var trial = formatTrialDate(trialValue);
       var sub = statusData.subscription || {};
-      status.textContent = "Trial ends " + trial + ". Current status: " + (sub.status || "trial") +
-        (sub.plan_code ? " (" + sub.plan_code.replace("_", " ") + ")" : "") +
-        (sub.expires_at ? ", paid through " + new Date(sub.expires_at).toLocaleDateString() : "") + ".";
+      status.textContent = trial
+        ? "Trial ends " + trial + ". Current status: " + (sub.status || "trial") +
+          (sub.plan_code ? " (" + sub.plan_code.replace("_", " ") + ")" : "") +
+          (sub.expires_at ? ", paid through " + formatTrialDate(sub.expires_at) : "") + "."
+        : "Trial end date is not available for this account. Current status: " + (sub.status || "trial") + ".";
       if (checkout) checkout.disabled = false;
     }
     box.innerHTML = plans.map(function (p) {
@@ -131,11 +148,17 @@
       render(FALLBACK_PLANS);
       return;
     }
-    var res = await fetch(base + "/api/billing/status", { headers: { Authorization: "Bearer " + access } });
-    var data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not load status.");
-    statusData = data;
-    render(plansFrom(data));
+    try {
+      var res = await fetch(base + "/api/billing/status", { headers: { Authorization: "Bearer " + access } });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not load status.");
+      statusData = data;
+      render(plansFrom(data));
+    } catch (e) {
+      statusData = { loadError: true };
+      if (error) error.textContent = e.message || "Could not load subscription status.";
+      render(FALLBACK_PLANS);
+    }
   }
 
   async function checkout() {
@@ -255,12 +278,19 @@
       status.textContent = "Billing is not connected yet. The payment Worker URL is missing.";
       return;
     }
-    var res = await fetch(base + "/api/billing/status", { headers: { Authorization: "Bearer " + access } });
-    var data = await res.json();
-    var trial = data.trial_ends_at ? new Date(data.trial_ends_at).toLocaleDateString() : "not set";
-    var sub = data.subscription || {};
-    status.textContent = "Trial ends " + trial + ". Subscription: " + (sub.status || "trial") +
-      (sub.expires_at ? ", paid through " + new Date(sub.expires_at).toLocaleDateString() : "") + ".";
+    try {
+      var res = await fetch(base + "/api/billing/status", { headers: { Authorization: "Bearer " + access } });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not load status.");
+      var trial = formatTrialDate(trialEndFrom(data));
+      var sub = data.subscription || {};
+      status.textContent = trial
+        ? "Trial ends " + trial + ". Subscription: " + (sub.status || "trial") +
+          (sub.expires_at ? ", paid through " + formatTrialDate(sub.expires_at) : "") + "."
+        : "Trial end date is not available for this account. Subscription: " + (sub.status || "trial") + ".";
+    } catch (e) {
+      status.textContent = e.message || "Could not load subscription status.";
+    }
   }
 
   document.addEventListener("click", function (e) {
@@ -276,5 +306,5 @@
     wirePage();
   }
 
-  global.ReceiptlyBilling = { open: open, close: close };
+  global.ReceiptlyBilling = { open: open, close: close, trialEndFrom: trialEndFrom, formatTrialDate: formatTrialDate };
 })(window);
