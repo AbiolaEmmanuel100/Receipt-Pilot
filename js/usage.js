@@ -1,4 +1,3 @@
-
 (function (global) {
   "use strict";
 
@@ -7,11 +6,7 @@
   var GATE_SESSION = "receiptly_account_gate_shown";
 
   function loggedIn() {
-    return !!(
-      global.ReceiptlyAccount &&
-      ReceiptlyAccount.userId &&
-      ReceiptlyAccount.userId()
-    );
+    return !!(global.ReceiptlyAccount && ReceiptlyAccount.userId && ReceiptlyAccount.userId());
   }
 
   function today() {
@@ -25,9 +20,7 @@
       localStorage.removeItem("receiptly_first_use");
       localStorage.removeItem("receiptly_signup_dismiss");
       sessionStorage.removeItem("receiptly_gate_shown");
-    } catch (e) {
-      /* ignore */
-    }
+    } catch (e) { /* ignore */ }
   }
 
   function hasVisited() {
@@ -49,23 +42,18 @@
   function initGuestSession() {
     if (loggedIn()) return;
     if (allowGuestThisSession()) return;
-
     if (!hasVisited()) {
       try {
         localStorage.setItem(VISIT_KEY, "true");
         sessionStorage.setItem(SESSION_GUEST_KEY, "1");
-      } catch (e) {
-        /* ignore */
-      }
+      } catch (e) { /* ignore */ }
     }
   }
 
   function endGuestSession() {
     try {
       sessionStorage.removeItem(SESSION_GUEST_KEY);
-    } catch (e) {
-      /* ignore */
-    }
+    } catch (e) { /* ignore */ }
   }
 
   function requiresAccount() {
@@ -75,79 +63,62 @@
 
   function entitled(u) {
     if (!u) return false;
-
     var now = Date.now();
-
-    if (
-      u.subscriptionStatus === "active" &&
-      u.subscriptionExpiresAt &&
-      now < new Date(u.subscriptionExpiresAt).getTime()
-    ) {
-      return true;
-    }
-
-    if (
-      u.trialEndsAt &&
-      now < new Date(u.trialEndsAt).getTime()
-    ) {
-      return true;
-    }
-
+    if (u.subscriptionStatus === "active" && u.subscriptionExpiresAt && now < new Date(u.subscriptionExpiresAt).getTime()) return true;
+    if (u.trialEndsAt && now < new Date(u.trialEndsAt).getTime()) return true;
     return false;
   }
 
   function daysLeft(u) {
     if (!u || !u.trialEndsAt) return null;
-
-    var end = new Date(u.trialEndsAt).getTime();
-    if (!Number.isFinite(end)) return null;
-
-    return Math.ceil((end - Date.now()) / 86400000);
-  }
-
-  function stopCountdown(banner) {
-    if (banner && banner._trialCountdown) {
-      clearInterval(banner._trialCountdown);
-      banner._trialCountdown = null;
-    }
+    return Math.ceil((new Date(u.trialEndsAt).getTime() - Date.now()) / 86400000);
   }
 
   function canPersist() {
     if (loggedIn()) {
-      var u =
-        global.ReceiptlyAccount &&
-        ReceiptlyAccount.user &&
-        ReceiptlyAccount.user();
-
+      var u = global.ReceiptlyAccount && ReceiptlyAccount.user && ReceiptlyAccount.user();
       if (!u || !u.entitlementChecked) return true;
       return entitled(u);
     }
-
     initGuestSession();
     return allowGuestThisSession();
   }
 
+  var trialTimer = null;
+
+  function clearTrialTimer() {
+    if (trialTimer) {
+      clearInterval(trialTimer);
+      trialTimer = null;
+    }
+  }
+
   function ensureUi() {
     if (document.getElementById("usageBanner")) return;
-
     var banner = document.createElement("div");
     banner.id = "usageBanner";
     banner.className = "usage-banner";
     banner.hidden = true;
     banner.innerHTML =
-      '<p id="usageBannerText"></p>' +
+      '<div class="trial-count">' +
+        '<div class="trial-count-copy">' +
+          '<p class="trial-count-title" id="usageBannerText">Your free trial ends in</p>' +
+          '<p class="trial-count-sr" id="usageBannerSummary"></p>' +
+        "</div>" +
+        '<div class="trial-count-grid" aria-hidden="true">' +
+          '<div class="trial-count-unit"><strong id="trialDays">00</strong><span>Days</span></div>' +
+          '<div class="trial-count-unit"><strong id="trialHours">00</strong><span>Hours</span></div>' +
+          '<div class="trial-count-unit"><strong id="trialMinutes">00</strong><span>Minutes</span></div>' +
+          '<div class="trial-count-unit"><strong id="trialSeconds">00</strong><span>Seconds</span></div>' +
+        "</div>" +
+      "</div>" +
       '<div class="usage-banner-actions">' +
-      '<button type="button" class="btn btn-primary btn-sm" id="usageBannerSignup">Create free account</button>' +
-      '<button type="button" class="btn btn-ghost btn-sm" id="usageBannerDismiss">Not now</button>' +
+        '<button type="button" class="btn btn-primary btn-sm" id="usageBannerSignup">View plans</button>' +
+        '<button type="button" class="btn btn-ghost btn-sm" id="usageBannerDismiss">Not now</button>' +
       "</div>";
-
     var header = document.querySelector(".site-header");
-
-    if (header && header.parentNode) {
-      header.parentNode.insertBefore(banner, header.nextSibling);
-    } else {
-      document.body.insertBefore(banner, document.body.firstChild);
-    }
+    if (header && header.parentNode) header.parentNode.insertBefore(banner, header.nextSibling);
+    else document.body.insertBefore(banner, document.body.firstChild);
 
     var gate = document.createElement("div");
     gate.className = "save-dialog";
@@ -155,15 +126,14 @@
     gate.hidden = true;
     gate.innerHTML =
       '<div class="card auth-card">' +
-      '<div class="auth-brand"><a class="logo" href="index.html">Receipt <span>Pilot</span></a></div>' +
-      "<h2>Create a free account to continue</h2>" +
-      "<p>You've used Receipt Pilot on this device before. Sign up or log in to keep saving receipts. Existing receipts on this device are not deleted.</p>" +
-      '<div class="actions-bar" style="justify-content:center">' +
-      '<button type="button" class="btn btn-primary" id="usageGateSignup">Create Free Account</button>' +
-      '<button type="button" class="btn btn-secondary" id="usageGateLogin">Log In</button>' +
-      "</div>" +
+        '<div class="auth-brand"><a class="logo" href="index.html">Receipt <span>Pilot</span></a></div>' +
+        "<h2>Create a free account to continue</h2>" +
+        "<p>You've used Receipt Pilot on this device before. Sign up or log in to keep saving receipts. Existing receipts on this device are not deleted.</p>" +
+        '<div class="actions-bar" style="justify-content:center">' +
+          '<button type="button" class="btn btn-primary" id="usageGateSignup">Create Free Account</button>' +
+          '<button type="button" class="btn btn-secondary" id="usageGateLogin">Log In</button>' +
+        "</div>" +
       "</div>";
-
     document.body.appendChild(gate);
 
     var paywall = document.createElement("div");
@@ -175,232 +145,152 @@
     paywall.setAttribute("aria-labelledby", "paywallTitle");
     paywall.innerHTML =
       '<div class="card billing-card">' +
-      '<div class="auth-brand"><a class="logo" href="index.html">Receipt <span>Pilot</span></a></div>' +
-      '<h2 id="paywallTitle">Your free trial has ended</h2>' +
-      '<p id="paywallCopy">Your 14-day free trial is over. Choose a plan to restore access to your Receipt Pilot workspace and protected online records.</p>' +
-      '<p class="hint">Saved receipts are kept. Access returns after the payment is verified by the server. This screen cannot be dismissed to restore access.</p>' +
-      '<ul class="paywall-plans">' +
-      "<li>Monthly — ₦1,500</li>" +
-      "<li>Quarterly — ₦4,275</li>" +
-      "<li>Semi-annual — ₦8,100</li>" +
-      "<li>Annual — ₦15,300</li>" +
-      "</ul>" +
-      '<button type="button" class="btn btn-primary" id="paywallPlans">Choose a plan</button>' +
-      '<button type="button" class="btn btn-secondary" id="paywallSignOut">Sign out</button>' +
-      '<p class="hint"><a href="privacy-policy.html">Privacy</a> · <a href="terms.html">Terms</a></p>' +
+        '<div class="auth-brand"><a class="logo" href="index.html">Receipt <span>Pilot</span></a></div>' +
+        '<h2 id="paywallTitle">Your free trial has ended</h2>' +
+        '<p id="paywallCopy">Your 14-day free trial is over. Choose a plan to restore access to your Receipt Pilot workspace and protected online records.</p>' +
+        '<p class="hint">Saved receipts are kept. Access returns after the payment is verified by the server. This screen cannot be dismissed to restore access.</p>' +
+        '<ul class="paywall-plans">' +
+          "<li>Monthly — ₦1,500</li>" +
+          "<li>Quarterly — ₦4,275</li>" +
+          "<li>Semi-annual — ₦8,100</li>" +
+          "<li>Annual — ₦15,300</li>" +
+        "</ul>" +
+        '<button type="button" class="btn btn-primary" id="paywallPlans">Choose a plan</button>' +
+        '<button type="button" class="btn btn-secondary" id="paywallSignOut">Sign out</button>' +
+        '<p class="hint"><a href="privacy-policy.html">Privacy</a> · <a href="terms.html">Terms</a></p>' +
       "</div>";
-
     document.body.appendChild(paywall);
-
     document.getElementById("paywallPlans").addEventListener("click", function () {
-      if (global.ReceiptlyBilling && ReceiptlyBilling.open) {
-        ReceiptlyBilling.open();
-      } else {
-        location.href = "billing.html";
-      }
+      if (global.ReceiptlyBilling && ReceiptlyBilling.open) ReceiptlyBilling.open();
+      else location.href = "billing.html";
     });
-
     document.getElementById("paywallSignOut").addEventListener("click", function () {
-      if (global.ReceiptlyAccount && ReceiptlyAccount.logout) {
-        ReceiptlyAccount.logout();
-      }
+      if (global.ReceiptlyAccount && ReceiptlyAccount.logout) ReceiptlyAccount.logout();
     });
 
     document.getElementById("usageBannerSignup").addEventListener("click", function () {
       banner.hidden = true;
-
-      if (global.ReceiptlyAccount) {
-        ReceiptlyAccount.showSignup();
-      }
+      if (global.ReceiptlyAccount) ReceiptlyAccount.showSignup();
     });
-
     document.getElementById("usageBannerDismiss").addEventListener("click", function () {
       banner.hidden = true;
-      stopCountdown(banner);
     });
-
     document.getElementById("usageGateSignup").addEventListener("click", function () {
       gate.hidden = true;
-
-      if (global.ReceiptlyAccount) {
-        ReceiptlyAccount.showSignup();
-      }
+      if (global.ReceiptlyAccount) ReceiptlyAccount.showSignup();
     });
-
     document.getElementById("usageGateLogin").addEventListener("click", function () {
       gate.hidden = true;
-
-      if (global.ReceiptlyAccount) {
-        ReceiptlyAccount.showLogin();
-      }
+      if (global.ReceiptlyAccount) ReceiptlyAccount.showLogin();
     });
   }
 
   function showPaywall(message) {
     ensureUi();
-
     var paywall = document.getElementById("trialPaywall");
     var copy = document.getElementById("paywallCopy");
-
     if (copy && message) copy.textContent = message;
     if (paywall) paywall.hidden = false;
   }
 
   function showGate() {
     if (loggedIn()) {
-      var u =
-        global.ReceiptlyAccount &&
-        ReceiptlyAccount.user &&
-        ReceiptlyAccount.user();
-
+      var u = global.ReceiptlyAccount && ReceiptlyAccount.user && ReceiptlyAccount.user();
       if (u && u.entitlementChecked && !entitled(u)) {
-        showPaywall(
-          u.trialEndsAt || u.subscriptionExpiresAt
-            ? "Your 14-day free trial is over. Choose a plan to restore access to your Receipt Pilot workspace and protected online records."
-            : "We could not confirm an active trial. Existing dates are not reset, and a new trial is not created. Choose a plan to continue."
-        );
+        showPaywall(u.trialEndsAt || u.subscriptionExpiresAt
+          ? "Your 14-day free trial is over. Choose a plan to restore access to your Receipt Pilot workspace and protected online records."
+          : "We could not confirm an active trial. Existing dates are not reset, and a new trial is not created. Choose a plan to continue.");
       }
-
       return false;
     }
-
     initGuestSession();
-
     if (!requiresAccount()) return false;
-
     ensureUi();
     document.getElementById("usageGate").hidden = false;
-
     return true;
   }
 
+  function pad(n) {
+    return String(n).padStart(2, "0");
+  }
+
   function showTrialBanner() {
+    clearTrialTimer();
     if (!loggedIn()) return;
-
-    var u =
-      global.ReceiptlyAccount &&
-      ReceiptlyAccount.user &&
-      ReceiptlyAccount.user();
-
+    var u = global.ReceiptlyAccount && ReceiptlyAccount.user && ReceiptlyAccount.user();
     if (!u || !u.entitlementChecked) return;
-
     ensureUi();
-
     var banner = document.getElementById("usageBanner");
-    var text = document.getElementById("usageBannerText");
     var signup = document.getElementById("usageBannerSignup");
     var dismiss = document.getElementById("usageBannerDismiss");
-
-    if (!banner || !text) return;
-
+    if (!banner) return;
     banner.classList.remove("usage-banner-warn");
-
     if (!entitled(u)) {
-      stopCountdown(banner);
       showPaywall();
       banner.hidden = true;
       return;
     }
-
     var paywall = document.getElementById("trialPaywall");
     if (paywall) paywall.hidden = true;
-
-    if (
-      u.subscriptionStatus === "active" &&
-      u.subscriptionExpiresAt &&
-      Date.now() < new Date(u.subscriptionExpiresAt).getTime()
-    ) {
-      stopCountdown(banner);
+    if (u.subscriptionStatus === "active" && u.subscriptionExpiresAt && Date.now() < new Date(u.subscriptionExpiresAt).getTime()) {
       banner.hidden = true;
       return;
     }
-
-    if (!u.trialEndsAt) {
-      stopCountdown(banner);
-      text.textContent = "Your trial end date could not be confirmed.";
-      banner.hidden = false;
+    var end = new Date(u.trialEndsAt).getTime();
+    if (!u.trialEndsAt || isNaN(end)) {
+      banner.hidden = true;
       return;
     }
-
-    var trialEnd = new Date(u.trialEndsAt).getTime();
-
-    if (!Number.isFinite(trialEnd)) {
-      stopCountdown(banner);
-      text.textContent = "Your trial end date could not be confirmed.";
-      banner.hidden = false;
-      return;
-    }
-
-    function updateCountdown() {
-      var remaining = trialEnd - Date.now();
-
-      if (remaining <= 0) {
-        text.textContent = "Your free trial has ended.";
-        banner.classList.add("usage-banner-warn");
-        stopCountdown(banner);
-        return false;
-      }
-
-      var days = Math.floor(remaining / 86400000);
-      var hours = Math.floor((remaining % 86400000) / 3600000);
-      var minutes = Math.floor((remaining % 3600000) / 60000);
-      var seconds = Math.floor((remaining % 60000) / 1000);
-
-      text.textContent =
-        "Your free trial ends in " +
-        days + (days === 1 ? " day, " : " days, ") +
-        hours + (hours === 1 ? " hour, " : " hours, ") +
-        minutes + (minutes === 1 ? " minute, and " : " minutes, and ") +
-        seconds + (seconds === 1 ? " second." : " seconds.");
-
-      if (days < 4) {
-        banner.classList.add("usage-banner-warn");
-      } else {
-        banner.classList.remove("usage-banner-warn");
-      }
-
-      return true;
-    }
-
-    stopCountdown(banner);
-
     if (signup) {
       signup.hidden = false;
       signup.textContent = "View plans";
       signup.onclick = function () {
-        if (global.ReceiptlyBilling && ReceiptlyBilling.open) {
-          ReceiptlyBilling.open();
-        } else {
-          location.href = "billing.html";
-        }
+        if (global.ReceiptlyBilling && ReceiptlyBilling.open) ReceiptlyBilling.open();
+        else location.href = "billing.html";
       };
     }
-
-    if (dismiss) {
-      dismiss.hidden = false;
+    function tick() {
+      var diff = end - Date.now();
+      if (diff <= 0) {
+        clearTrialTimer();
+        banner.hidden = true;
+        showPaywall();
+        return;
+      }
+      var total = Math.floor(diff / 1000);
+      var days = Math.floor(total / 86400);
+      var hours = Math.floor((total % 86400) / 3600);
+      var minutes = Math.floor((total % 3600) / 60);
+      var seconds = total % 60;
+      var daysEl = document.getElementById("trialDays");
+      var hoursEl = document.getElementById("trialHours");
+      var minutesEl = document.getElementById("trialMinutes");
+      var secondsEl = document.getElementById("trialSeconds");
+      if (daysEl) daysEl.textContent = pad(days);
+      if (hoursEl) hoursEl.textContent = pad(hours);
+      if (minutesEl) minutesEl.textContent = pad(minutes);
+      if (secondsEl) secondsEl.textContent = pad(seconds);
+      var summary = document.getElementById("usageBannerSummary");
+      if (summary && seconds === 0) {
+        summary.textContent = days + " days, " + hours + " hours, " + minutes + " minutes remaining.";
+      }
+      banner.classList.toggle("usage-banner-warn", diff <= 3 * 86400000);
+      if (dismiss) dismiss.hidden = diff <= 3 * 86400000;
+      banner.hidden = false;
     }
-
-    banner.hidden = false;
-
-    if (updateCountdown()) {
-      banner._trialCountdown = setInterval(function () {
-        updateCountdown();
-      }, 1000);
-    }
+    tick();
+    trialTimer = setInterval(tick, 1000);
   }
 
   function boot() {
     cleanOldGateKeys();
-
     if (global.ReceiptlyAccount && ReceiptlyAccount.ready) {
       ReceiptlyAccount.ready.then(function () {
         if (loggedIn()) {
           showTrialBanner();
           return;
         }
-
         initGuestSession();
-
         if (requiresAccount()) {
           try {
             if (!sessionStorage.getItem(GATE_SESSION)) {
@@ -414,10 +304,7 @@
       });
     } else {
       initGuestSession();
-
-      if (requiresAccount()) {
-        showGate();
-      }
+      if (requiresAccount()) showGate();
     }
   }
 
