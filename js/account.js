@@ -137,6 +137,7 @@
   }
 
   function noteSuccessfulSignIn(email) {
+    pendingOtpEmail = "";
     try { localStorage.setItem("receiptly_login_pref", "returning"); } catch (e) { /* preference only */ }
     var magicBox = document.getElementById("rememberMagicEmail");
     var passBox = document.getElementById("rememberLoginEmail");
@@ -162,7 +163,8 @@
       var fromPassword = document.getElementById("loginEmail");
       var toMagic = document.getElementById("magicEmail");
       if (toMagic && fromPassword && fromPassword.value && !toMagic.value) toMagic.value = fromPassword.value;
-      showCodeRequestStep();
+      if (pendingOtpEmail) showOtpStep(pendingOtpEmail, { clear: true });
+      else showCodeRequestStep();
     }
   }
 
@@ -267,6 +269,7 @@
                 '<p class="ok" id="magicOk"></p>' +
                 '<label class="hint"><input type="checkbox" id="rememberMagicEmail"> Remember this email on this browser</label>' +
                 '<button class="btn btn-primary" type="submit" id="magicSubmit">Email me a sign-in code</button>' +
+                '<p class="auth-switch" id="backToOtpWrap" hidden><button type="button" id="backToOtp">Enter the code I already have</button></p>' +
               "</form>" +
               '<form id="otpForm" hidden>' +
                 "<h3>Check your email</h3>" +
@@ -411,6 +414,11 @@
     });
     if (name === "loginPanel" && !userId()) {
       resetLoginForm();
+      if (pendingOtpEmail) {
+        showLoginMode("magic");
+        prefillRememberedEmail();
+        return;
+      }
       showLoginMode(loginPreference());
       prefillRememberedEmail();
     }
@@ -519,6 +527,7 @@
   function onSignedOut() {
     sessionUser = null;
     claimAskedFor = null;
+    pendingOtpEmail = "";
     paintAccountButtons();
     if (global.ReceiptlyStorage && ReceiptlyStorage.setMeta) {
       ReceiptlyStorage.setMeta("lastUserId", null);
@@ -1015,16 +1024,22 @@
 
   var pendingOtpEmail = "";
   var otpBusy = false;
+  var otpResendBusy = false;
+  var otpResendTimer = null;
 
-  function showOtpStep(email) {
-    pendingOtpEmail = email;
+  function showOtpStep(email, opts) {
+    pendingOtpEmail = email || pendingOtpEmail;
     var line = document.getElementById("otpEmailLine");
-    if (line) line.textContent = "Enter the code sent to " + email + ".";
+    if (line) line.textContent = "Enter the code sent to " + pendingOtpEmail + ".";
     var form = document.getElementById("magicForm");
     var otp = document.getElementById("otpForm");
     if (form) form.hidden = true;
     if (otp) otp.hidden = false;
+    var magicEmail = document.getElementById("magicEmail");
+    if (magicEmail && pendingOtpEmail && !magicEmail.value) magicEmail.value = pendingOtpEmail;
     var code = document.getElementById("otpCode");
+    if (code && opts && opts.clear) code.value = "";
+    paintOtpResend();
     if (code) code.focus();
   }
 
@@ -1033,6 +1048,50 @@
     var otp = document.getElementById("otpForm");
     if (form) form.hidden = false;
     if (otp) otp.hidden = true;
+    var back = document.getElementById("backToOtpWrap");
+    if (back) back.hidden = !pendingOtpEmail;
+  }
+
+  function paintOtpResend() {
+    var btn = document.getElementById("resendOtp");
+    if (!btn) return;
+    var left = Math.ceil((magicUntil - Date.now()) / 1000);
+    if (otpResendBusy) {
+      btn.disabled = true;
+      btn.textContent = "Sending…";
+      return;
+    }
+    if (left > 0) {
+      btn.disabled = true;
+      btn.textContent = "Resend available in " + left + "s";
+      return;
+    }
+    btn.disabled = false;
+    btn.textContent = "Resend code";
+  }
+
+  function startOtpResendCountdown(seconds) {
+    magicUntil = Date.now() + Math.max(1, seconds) * 1000;
+    if (otpResendTimer) clearInterval(otpResendTimer);
+    paintOtpResend();
+    otpResendTimer = setInterval(function () {
+      paintOtpResend();
+      if (Date.now() >= magicUntil) {
+        clearInterval(otpResendTimer);
+        otpResendTimer = null;
+      }
+    }, 1000);
+  }
+
+  function otpWaitMessage(err) {
+    var m = String((err && (err.message || err.error_description)) || err || "");
+    var match = m.match(/(\d+)\s*second/i);
+    var seconds = match ? Number(match[1]) : 60;
+    if (/rate limit|too many|only request|security purposes|after \d+/i.test(m)) {
+      startOtpResendCountdown(seconds);
+      return "Please wait " + seconds + " seconds before requesting another code. Your previous code may still be valid.";
+    }
+    return authErrorMessage(err);
   }
 
   async function sendMagic(ev) {
@@ -1042,7 +1101,8 @@
     if (err) err.textContent = "";
     if (ok) ok.textContent = "";
     if (Date.now() < magicUntil) {
-      if (err) err.textContent = "Please wait before requesting another code.";
+      var left = Math.ceil((magicUntil - Date.now()) / 1000);
+      if (err) err.textContent = "Please wait " + left + " seconds before requesting another code.";
       return;
     }
     var email = String(document.getElementById("magicEmail").value || "").trim();
@@ -1064,11 +1124,12 @@
       });
       if (result.error) throw result.error;
       magicUntil = Date.now() + 60000;
-      showOtpStep(email);
+      showOtpStep(email, { clear: true });
+      startOtpResendCountdown(60);
       var otpOk = document.getElementById("otpOk");
       if (otpOk) otpOk.textContent = "Request accepted. If this address can sign in, a code is on its way. This does not confirm delivery.";
     } catch (e) {
-      if (err) err.textContent = authErrorMessage(e);
+      if (err) err.textContent = otpWaitMessage(e);
     } finally {
       setBusy(btn, false, "Email me a sign-in code");
     }
@@ -1110,6 +1171,47 @@
     } finally {
       otpBusy = false;
       setBusy(btn, false, "Verify and sign in");
+    }
+  }
+
+  async function resendOtp() {
+    if (otpResendBusy) return;
+    var err = document.getElementById("otpError");
+    var ok = document.getElementById("otpOk");
+    if (err) err.textContent = "";
+    if (ok) ok.textContent = "";
+    if (!pendingOtpEmail) {
+      showCodeRequestStep();
+      return;
+    }
+    if (Date.now() < magicUntil) {
+      var left = Math.ceil((magicUntil - Date.now()) / 1000);
+      if (err) err.textContent = "Please wait " + left + " seconds before requesting another code. Your previous code may still be valid.";
+      paintOtpResend();
+      return;
+    }
+    var sb = await ensureClient();
+    if (!sb) {
+      if (err) err.textContent = notConnectedMessage();
+      return;
+    }
+    otpResendBusy = true;
+    paintOtpResend();
+    try {
+      var result = await sb.auth.signInWithOtp({
+        email: pendingOtpEmail,
+        options: { emailRedirectTo: authRedirect("/"), shouldCreateUser: false }
+      });
+      if (result.error) throw result.error;
+      showOtpStep(pendingOtpEmail, { clear: true });
+      startOtpResendCountdown(60);
+      if (ok) ok.textContent = "Request accepted. Enter the newest code. This does not confirm delivery.";
+    } catch (e) {
+      if (err) err.textContent = otpWaitMessage(e);
+      paintOtpResend();
+    } finally {
+      otpResendBusy = false;
+      paintOtpResend();
     }
   }
 
@@ -1188,9 +1290,9 @@
       if (input.value !== digits) input.value = digits;
       if (digits.length === 6 && !otpBusy) verifyCode();
     });
-    document.getElementById("resendOtp").addEventListener("click", function () {
-      showCodeRequestStep();
-      sendMagic();
+    document.getElementById("resendOtp").addEventListener("click", resendOtp);
+    document.getElementById("backToOtp").addEventListener("click", function () {
+      if (pendingOtpEmail) showOtpStep(pendingOtpEmail, { clear: true });
     });
     document.getElementById("changeOtpEmail").addEventListener("click", function () {
       var err = document.getElementById("otpError");
