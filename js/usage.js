@@ -1,4 +1,4 @@
-(function (global) {
+v(function (global) {
   "use strict";
 
   var VISIT_KEY = "receiptly_has_visited";
@@ -212,7 +212,56 @@
       banner.hidden = true;
       return;
     }
+    
     var left = daysLeft(u);
+    if (left === null) return;
+
+    function updateCountdown() {
+      var remaining = new Date(u.trialEndsAt).getTime() - Date.now();
+
+      if (remaining <= 0) {
+        text.textContent = "Your free trial has ended.";
+        banner.classList.add("usage-banner-warn");
+        return false;
+      }
+
+      var days = Math.floor(remaining / 86400000);
+      var hours = Math.floor((remaining % 86400000) / 3600000);
+      var minutes = Math.floor((remaining % 3600000) / 60000);
+      var seconds = Math.floor((remaining % 60000) / 1000);
+
+      text.textContent = "Your free trial ends in " +
+        days + " days, " +
+        hours + " hours, " +
+        minutes + " minutes, and " +
+        seconds + " seconds.";
+
+      if (days < 4) banner.classList.add("usage-banner-warn");
+      return true;
+    }
+
+    if (banner._trialCountdown) {
+      clearInterval(banner._trialCountdown);
+    }
+
+    if (updateCountdown()) {
+      banner._trialCountdown = setInterval(function () {
+        if (!updateCountdown()) {
+          clearInterval(banner._trialCountdown);
+          banner._trialCountdown = null;
+        }
+      }, 1000);
+    }
+
+    if (signup) {
+      signup.hidden = false;
+      signup.textContent = "View plans";
+      signup.onclick = function () {
+        if (global.ReceiptlyBilling && ReceiptlyBilling.open) ReceiptlyBilling.open();
+        else location.href = "billing.html";
+      };
+    }
+
     if (left === null) return;
     text.textContent = left <= 1
       ? "Your free trial ends in " + left + " day."
