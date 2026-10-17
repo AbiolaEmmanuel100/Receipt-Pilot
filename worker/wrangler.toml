@@ -11,4 +11,5 @@ compatibility_date = "2026-10-14"
 
 [vars]
 SITE_ORIGIN = "https://receipt-pilot.com"
+SUPABASE_URL = "https://xwmfkfcsyqgwtfjumubh.supabase.co"
 PAYSTACK_RECURRING_ENABLED = "false"
