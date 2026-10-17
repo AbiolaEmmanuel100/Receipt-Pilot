@@ -83,6 +83,7 @@ async function checkout(request, env) {
     email: user.email,
     amount: plan.kobo,
     currency: "NGN",
+    channels: ["card", "bank", "bank_transfer", "ussd"],
     callback_url: (env.SITE_ORIGIN || "").replace(/\/$/, "") + "/billing.html",
     metadata: {
       user_id: user.id,
