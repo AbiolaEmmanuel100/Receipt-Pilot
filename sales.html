@@ -42,7 +42,7 @@
         <button type="button" class="btn btn-secondary" data-sales-view="weekly">Weekly</button>
         <button type="button" class="btn btn-secondary" data-sales-view="monthly">Monthly</button>
       </div>
-      <div class="filters">
+      <div class="filters sales-filters">
         <div class="field"><label for="salesPreset">Period</label>
           <select id="salesPreset">
             <option value="today">Today</option>
@@ -57,6 +57,15 @@
         <div class="field"><label for="salesDay">Day</label><input type="date" id="salesDay"></div>
         <div class="field"><label for="salesFrom">From</label><input type="date" id="salesFrom"></div>
         <div class="field"><label for="salesTo">To</label><input type="date" id="salesTo"></div>
+        <div class="field"><label for="salesProduct">Product</label><input type="search" id="salesProduct" placeholder="Iron, Rice, Blender"></div>
+        <div class="field"><label for="salesPayStatus">Payment status</label>
+          <select id="salesPayStatus">
+            <option value="all">All payments</option>
+            <option value="PAID IN FULL">Fully paid</option>
+            <option value="PARTIALLY PAID">Partially paid</option>
+            <option value="UNPAID">Unpaid</option>
+          </select>
+        </div>
       </div>
       <p class="hint" id="salesPeriod"></p>
       <div id="salesReport">
@@ -69,6 +78,24 @@
           <div class="stat"><span>Refunded</span><strong id="salesRefunded">₦0.00</strong></div>
         </div>
         <p>Fully paid: <span id="salesPaidN">0</span> · Partially paid: <span id="salesPartN">0</span> · Unpaid: <span id="salesUnpaidN">0</span></p>
+                <h2>Product sales</h2>
+        <p class="hint">Sales by product, not profit or stock. Payments are allocated from each receipt in proportion to the product line value.</p>
+        <div class="summary-grid">
+          <div class="stat"><span>Total units sold</span><strong id="productUnits">0</strong></div>
+          <div class="stat"><span>Total product sales value</span><strong id="productSales">₦0.00</strong></div>
+          <div class="stat"><span>Total amount collected</span><strong id="productCollected">₦0.00</strong></div>
+          <div class="stat"><span>Total outstanding</span><strong id="productOutstanding">₦0.00</strong></div>
+        </div>
+        <div class="empty-state" id="productEmpty" hidden>
+          <h2>No products match these filters</h2>
+          <p>Try another product name, payment status, or date range.</p>
+        </div>
+        <div class="table-scroll" id="productTableWrap">
+          <table class="records-table">
+            <thead><tr><th>Product</th><th>Quantity sold</th><th>Sales value</th><th>Amount collected</th><th>Outstanding</th></tr></thead>
+            <tbody id="productBody"></tbody>
+          </table>
+        </div>
         <h2>Day by day</h2>
         <div class="audit-box" id="dayBreakdown"></div>
         <h2>Receipts</h2>
@@ -81,7 +108,8 @@
       </div>
       <div class="data-tools">
         <button type="button" class="btn btn-primary" id="salesPdf">Download PDF report</button>
-        <button type="button" class="btn btn-secondary" id="salesCsv">Download CSV</button>
+        <button type="button" class="btn btn-secondary" id="salesCsv">Download receipt CSV</button>
+        <button type="button" class="btn btn-secondary" id="productCsv">Download product CSV</button>
       </div>
     </div>
   </main>
