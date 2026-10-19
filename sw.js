@@ -1,5 +1,5 @@
 /* Receipt Pilot service worker — caches the app shell for offline use. */
-const CACHE = "receiptly-v36";
+const CACHE = "receiptly-v37";
 const PRECACHE = [
   "./",
   "./index.html",

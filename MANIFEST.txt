@@ -1,10 +1,16 @@
-Receipt Pilot navigation redesign
+Receipt Pilot mobile navigation fix
+
+Cause
+- At max-width 860px, .nav-menu was forced to display:grid.
+- That later rule showed closed Sales and Business links even when .nav-drop was not open.
+
+Fix
+- Mobile .nav-menu is display:none by default.
+- .nav-drop.open > .nav-menu remains display:grid.
+- Service worker cache bumped to receiptly-v37 so the corrected CSS is not served from the old cache.
 
 REPLACE
-- css/styles.css — logo mark, compact bar, dropdowns, responsive menu
-- js/ui.js — menu and dropdown keyboard/click behavior
-- sw.js — cache version receiptly-v36 so the new navigation is not served from an old cache
-- listed HTML pages — consistent header with Create Receipt, Sales, Business, Accounting, Subscription, About, Account
+- css/styles.css
+- sw.js
 
-NOT CHANGED
-- database, Supabase, billing logic, receipt logic
+No HTML or JavaScript changes were required. Account button and destinations are unchanged.
