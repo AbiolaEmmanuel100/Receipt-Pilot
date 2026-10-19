@@ -110,6 +110,15 @@
   var all = [];
   var view = "daily";
 
+  function updateControls() {
+    var preset = $("#salesPreset") ? $("#salesPreset").value : "today";
+    var custom = preset === "custom";
+    var day = preset === "today" && view === "daily";
+    if ($("#salesFromWrap")) $("#salesFromWrap").hidden = !custom;
+    if ($("#salesToWrap")) $("#salesToWrap").hidden = !custom;
+    if ($("#salesDayWrap")) $("#salesDayWrap").hidden = !day;
+  }
+
   function periodBounds() {
     var today = new Date();
     var preset = $("#salesPreset").value;
@@ -175,7 +184,8 @@
     $("#salesUnpaidN").textContent = String(s.nUnpaid);
     if ($("#salesAvg")) $("#salesAvg").textContent = money(s.avg, list.length ? list : all);
     if ($("#salesRefunded")) $("#salesRefunded").textContent = money(s.refunded, list.length ? list : all);
-    $("#salesPeriod").textContent = b.from === b.to ? b.from : (b.from + " → " + b.to);
+    updateControls();
+    $("#salesPeriod").textContent = "Showing " + (b.from === b.to ? b.from : (b.from + " to " + b.to));
 
     var tbody = $("#salesBody");
     tbody.innerHTML = list.map(function (r) {
@@ -270,7 +280,13 @@
   function downloadPdf() {
     var node = document.getElementById("salesReport");
     if (!node) return;
-    ReceiptlyPdf.download(node, "sales-report").catch(function () {
+    var sections = Array.prototype.slice.call(node.querySelectorAll("details"));
+    var previous = sections.map(function (section) { return section.open; });
+    sections.forEach(function (section) { section.open = true; });
+    ReceiptlyPdf.download(node, "sales-report").then(function () {
+      sections.forEach(function (section, i) { section.open = previous[i]; });
+    }).catch(function () {
+      sections.forEach(function (section, i) { section.open = previous[i]; });
       ReceiptlyUI.toast("PDF library is still loading.", "error");
     });
   }
@@ -305,9 +321,16 @@
     document.querySelectorAll("[data-sales-view]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         view = btn.dataset.salesView;
+        if ($("#salesPreset")) {
+          if (view === "weekly") $("#salesPreset").value = "week";
+          else if (view === "monthly") $("#salesPreset").value = "month";
+          else $("#salesPreset").value = "today";
+        }
+        updateControls();
         render();
       });
     });
+    if ($("#salesPreset")) $("#salesPreset").addEventListener("change", updateControls);
     $("#salesCsv").addEventListener("click", downloadCsv);
     if ($("#productCsv")) $("#productCsv").addEventListener("click", downloadProductCsv);
     if ($("#salesProduct")) $("#salesProduct").addEventListener("input", render);
