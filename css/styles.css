@@ -685,11 +685,18 @@ textarea { min-height: 80px; resize: vertical; }
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
+  gap: 8px;
 }
 .app-banners > .usage-banner,
 .app-banners > .ios-install-hint {
-  flex: 1 1 320px;
-  min-width: 0;
+  flex: 1 1 420px;
+  min-width: min(100%, 420px);
+  box-sizing: border-box;
+}
+@media (min-width: 900px) {
+  .app-banners { flex-wrap: nowrap; }
+  .app-banners > .usage-banner,
+  .app-banners > .ios-install-hint { flex: 1 1 0; min-width: 0; }
 }
 .usage-banner {
   background: #f0fdfa;
@@ -742,7 +749,9 @@ textarea { min-height: 80px; resize: vertical; }
 .usage-banner-warn { background: #fff7ed; border-bottom-color: #fdba74; color: #9a3412; }
 .usage-banner-warn .trial-count-unit { border-color: #fdba74; }
 @media (max-width: 760px) {
-  .app-banners { display: block; }
+  .app-banners { display: flex; flex-direction: column; flex-wrap: nowrap; gap: 8px; }
+  .app-banners > .usage-banner,
+  .app-banners > .ios-install-hint { flex: 1 1 auto; width: 100%; min-width: 0; }
   .trial-count-unit { min-width: 64px; }
   .trial-count-unit strong { font-size: 1.3rem; }
 }
