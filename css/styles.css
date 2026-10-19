@@ -75,8 +75,21 @@ a:hover { text-decoration: underline; }
   color: #fff !important;
   border-radius: 999px;
   padding: 8px 12px !important;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
 }
-.nav-create:hover, .nav-create.active { background: var(--brand-dark); }
+.nav-create:hover, .nav-create.active, .nav-create:focus-visible {
+  background: var(--brand-dark);
+  color: #fff !important;
+  text-decoration: none;
+}
+.nav-create:focus-visible {
+  outline: 3px solid var(--brand-light);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-create { transition: none; }
+}
 .nav-drop { position: relative; }
 .nav-menu {
   display: none;
@@ -488,12 +501,13 @@ textarea { min-height: 80px; resize: vertical; }
   .nav.open { display: flex; }
   .nav-drop, .nav-menu { position: static; }
   .nav-menu {
-    display: grid;
+    display: none;
     min-width: 0;
     border: 0;
     box-shadow: none;
     padding: 0 0 8px 12px;
   }
+  .nav-drop.open > .nav-menu { display: grid; }
   .nav a, .nav-drop-btn { min-height: 40px; text-align: left; }
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   .hero { padding-top: 24px; }
