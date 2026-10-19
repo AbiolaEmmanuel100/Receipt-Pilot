@@ -26,10 +26,43 @@
 
   function installGuidance() {
     if (standalone()) return "Receipt Pilot is already installed on this device.";
-    if (isInApp()) return "This in-app browser cannot install apps. Open receipt-pilot.com in Safari or Chrome, then use the browser menu to install.";
+    if (isInApp()) return "This in-app browser cannot install apps. Open receipt-pilot.com in Chrome or Safari, then use the browser menu.";
     if (isIos()) return "On iPhone or iPad, tap Share, then choose Add to Home Screen.";
-    if (isAndroid()) return "To install on Android, open the Chrome menu and choose Install app or Add to Home screen.";
-    return "To install on desktop, open the Chrome or Edge menu and choose Install Receipt Pilot.";
+    if (deferredPrompt) return "Tap Install Receipt Pilot to use the browser's install prompt.";
+    if (isAndroid()) return "Open the Chrome menu and choose Install app or Add to Home screen.";
+    return "Open the Chrome or Edge menu and choose Install Receipt Pilot. Other browsers should open this site in Chrome or Edge.";
+  }
+
+  function showInstallDialog() {
+    var existing = document.getElementById("installDialog");
+    if (existing) existing.remove();
+    var dialog = document.createElement("div");
+    dialog.id = "installDialog";
+    dialog.setAttribute("role", "dialog");
+    dialog.setAttribute("aria-modal", "true");
+    dialog.setAttribute("aria-labelledby", "installDialogTitle");
+    dialog.style.cssText = "position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:flex-end;justify-content:center;z-index:80;padding:16px;";
+    dialog.innerHTML =
+      '<div style="background:#fff;border-radius:16px;padding:18px;max-width:420px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.18)">' +
+        '<h2 id="installDialogTitle" style="margin:0 0 8px;font-size:1.15rem">Install Receipt Pilot</h2>' +
+        '<p id="installDialogCopy" style="margin:0 0 14px"></p>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+          '<button type="button" class="btn btn-primary" id="installDialogAction">Install Receipt Pilot</button>' +
+          '<button type="button" class="btn btn-ghost" id="installDialogClose">Not now</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(dialog);
+    var copy = document.getElementById("installDialogCopy");
+    var action = document.getElementById("installDialogAction");
+    if (copy) copy.textContent = installGuidance();
+    if (action) {
+      action.hidden = !deferredPrompt || standalone() || isIos() || isInApp();
+      action.addEventListener("click", onInstallClick);
+    }
+    document.getElementById("installDialogClose").addEventListener("click", function () {
+      dialog.remove();
+      localStorage.setItem(isIos() || isInApp() ? IOS_DISMISS : DISMISS, "1");
+    });
   }
 
   function dismissed(key) {
@@ -156,6 +189,7 @@
       return;
     }
     showBanner(true, "guide");
+    showInstallDialog();
     if (window.ReceiptlyUI && ReceiptlyUI.toast) ReceiptlyUI.toast(installGuidance());
   }
 
@@ -183,7 +217,10 @@
   window.addEventListener("beforeinstallprompt", function (e) {
     e.preventDefault();
     deferredPrompt = e;
-    if (!standalone() && !dismissed(DISMISS)) showBanner(true, "android");
+    if (!standalone() && !dismissed(DISMISS)) {
+      showBanner(true, "android");
+      showInstallDialog();
+    }
   });
 
   window.addEventListener("appinstalled", function () {
@@ -202,6 +239,9 @@
     }
     ensureBanner();
     ensureNavButton();
-    if ((isIos() || isInApp()) && !dismissed(IOS_DISMISS)) showBanner(true, "guide");
+    if ((isIos() || isInApp()) && !dismissed(IOS_DISMISS)) {
+      showBanner(true, "guide");
+      showInstallDialog();
+    }
   });
 })();
