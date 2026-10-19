@@ -46,21 +46,54 @@ a:hover { text-decoration: underline; }
   min-height: 64px;
 }
 .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 800;
   font-size: 1.25rem;
   color: var(--ink);
   letter-spacing: -0.03em;
   text-decoration: none;
 }
+.logo-mark { width: 28px; height: 28px; flex: 0 0 28px; }
 .logo span { color: var(--brand); }
-.nav { display: flex; gap: 18px; align-items: center; }
-.nav a {
+.nav { display: flex; gap: 14px; align-items: center; }
+.nav a, .nav-drop-btn {
   color: var(--ink);
   font-weight: 600;
   font-size: 0.95rem;
   text-decoration: none;
+  background: none;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+  padding: 6px 2px;
 }
-.nav a:hover, .nav a.active { color: var(--brand); }
+.nav a:hover, .nav a.active, .nav-drop.open > .nav-drop-btn, .nav-drop-btn.active { color: var(--brand); }
+.nav-create {
+  background: var(--brand);
+  color: #fff !important;
+  border-radius: 999px;
+  padding: 8px 12px !important;
+}
+.nav-create:hover, .nav-create.active { background: var(--brand-dark); }
+.nav-drop { position: relative; }
+.nav-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 190px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 8px;
+  z-index: 50;
+}
+.nav-drop.open > .nav-menu { display: grid; }
+.nav-menu a { padding: 9px 10px; border-radius: 8px; }
+.nav-menu a:hover, .nav-menu a.active { background: #f0fdfa; }
 .nav-toggle {
   display: none;
   border: 1px solid var(--line);
@@ -437,8 +470,8 @@ textarea { min-height: 80px; resize: vertical; }
   .item-row .span-full { grid-column: 1 / -1; }
   .r-summary, .r-info { grid-template-columns: 1fr; }
 }
-@media (max-width: 640px) {
-  .nav-toggle { display: inline-flex; }
+@media (max-width: 860px) {
+  .nav-toggle { display: inline-flex; min-height: 40px; }
   .nav {
     display: none;
     position: absolute;
@@ -446,10 +479,22 @@ textarea { min-height: 80px; resize: vertical; }
     background: #fff;
     border-bottom: 1px solid var(--line);
     flex-direction: column;
+    align-items: stretch;
     padding: 12px 16px 16px;
-    gap: 12px;
+    gap: 4px;
+    max-height: calc(100vh - 64px);
+    overflow: auto;
   }
   .nav.open { display: flex; }
+  .nav-drop, .nav-menu { position: static; }
+  .nav-menu {
+    display: grid;
+    min-width: 0;
+    border: 0;
+    box-shadow: none;
+    padding: 0 0 8px 12px;
+  }
+  .nav a, .nav-drop-btn { min-height: 40px; text-align: left; }
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   .hero { padding-top: 24px; }
 }

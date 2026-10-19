@@ -60,17 +60,30 @@
 <body>
   <header class="site-header">
     <div class="wrap header-inner">
-      <a class="logo" href="index.html">Receipt-<span>Pilot</span></a>
-      <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="siteNav">Menu</button>
+      <a class="logo" href="index.html"><img class="logo-mark" src="assets/favicon.svg" alt="">Receipt-<span>Pilot</span></a>
+      <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="siteNav" aria-label="Open menu">Menu</button>
       <nav class="nav" id="siteNav" aria-label="Primary">
-        <a href="index.html" class="active">Receipt Generator</a>
-        <a href="records.html">History</a>
-        <a href="sales.html">Sales Records</a>
+        <a href="index.html" class="nav-create active">Create Receipt</a>
+        <div class="nav-drop">
+          <button type="button" class="nav-drop-btn" aria-expanded="false" aria-haspopup="true">Sales</button>
+          <div class="nav-menu" role="group" aria-label="Sales">
+            <a href="records.html">Receipt History</a>
+            <a href="sales.html">Sales Records</a>
+            <a href="customers.html">Customers</a>
+            <a href="payments.html">Payments</a>
+          </div>
+        </div>
+        <div class="nav-drop">
+          <button type="button" class="nav-drop-btn" aria-expanded="false" aria-haspopup="true">Business</button>
+          <div class="nav-menu" role="group" aria-label="Business">
+            <a href="inventory.html">Inventory</a>
+            <a href="suppliers.html">Suppliers</a>
+            <a href="expenses.html">Expenses</a>
+            <a href="notifications.html">Notifications</a>
+          </div>
+        </div>
         <a href="accounting.html">Accounting</a>
-        <a href="payments.html">Payments</a>
-        <a href="customers.html">Customers</a>
-        <a href="expenses.html">Expenses</a>
-        <a href="inventory.html">Inventory</a>
+        <a href="billing.html">Subscription</a>
         <a href="about.html">About</a>
         <button type="button" class="btn btn-ghost btn-sm" data-open-login>Account</button>
       </nav>

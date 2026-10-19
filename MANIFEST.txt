@@ -1,17 +1,10 @@
-Receipt Pilot business-management package
+Receipt Pilot navigation redesign
 
 REPLACE
-- accounting.html, js/accounting.js — read-only period reports with drill-down
-- suppliers pages/scripts — atomic stock purchase RPC
-- js/sync.js — optional product link and idempotent sale stock deduction
-- shared navigation pages — Accounting and Payments links
-- sw.js — cache version receiptly-v35
+- css/styles.css — logo mark, compact bar, dropdowns, responsive menu
+- js/ui.js — menu and dropdown keyboard/click behavior
+- sw.js — cache version receiptly-v36 so the new navigation is not served from an old cache
+- listed HTML pages — consistent header with Create Receipt, Sales, Business, Accounting, Subscription, About, Account
 
-ADD
-- payments.html, js/payments.js — operational payments and refunds
-- supabase/migrations/013_inventory_operations.sql
-- supabase/tests/013_inventory_operations_test.sql
-
-NOT MODIFIED
-- migrations 001–011
-- migration 012 was preserved and included for review
+NOT CHANGED
+- database, Supabase, billing logic, receipt logic

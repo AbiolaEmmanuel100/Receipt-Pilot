@@ -21,10 +21,65 @@
   function setupNav() {
     var toggle = document.getElementById("navToggle");
     var nav = document.getElementById("siteNav");
-    if (!toggle || !nav) return;
-    toggle.addEventListener("click", function () {
-      var open = nav.classList.toggle("open");
-      toggle.setAttribute("aria-expanded", String(open));
+    if (!nav) return;
+    if (toggle) {
+      toggle.addEventListener("click", function () {
+        var open = nav.classList.toggle("open");
+        toggle.setAttribute("aria-expanded", String(open));
+        toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+      });
+    }
+    var drops = Array.prototype.slice.call(nav.querySelectorAll(".nav-drop"));
+    function closeDrops(except) {
+      drops.forEach(function (drop) {
+        if (drop !== except) {
+          drop.classList.remove("open");
+          var btn = drop.querySelector(".nav-drop-btn");
+          if (btn) btn.setAttribute("aria-expanded", "false");
+        }
+      });
+    }
+    drops.forEach(function (drop) {
+      var btn = drop.querySelector(".nav-drop-btn");
+      if (!btn) return;
+      btn.addEventListener("click", function (event) {
+        event.stopPropagation();
+        var open = !drop.classList.contains("open");
+        closeDrops(open ? drop : null);
+        drop.classList.toggle("open", open);
+        btn.setAttribute("aria-expanded", String(open));
+      });
+      btn.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          drop.classList.remove("open");
+          btn.setAttribute("aria-expanded", "false");
+          btn.focus();
+        }
+      });
+    });
+    nav.addEventListener("click", function (event) {
+      if (event.target.closest("a")) {
+        if (toggle) {
+          nav.classList.remove("open");
+          toggle.setAttribute("aria-expanded", "false");
+          toggle.setAttribute("aria-label", "Open menu");
+        }
+        closeDrops(null);
+      }
+    });
+    document.addEventListener("click", function (event) {
+      if (!nav.contains(event.target) && event.target !== toggle) closeDrops(null);
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        closeDrops(null);
+        if (toggle && nav.classList.contains("open")) {
+          nav.classList.remove("open");
+          toggle.setAttribute("aria-expanded", "false");
+          toggle.setAttribute("aria-label", "Open menu");
+          toggle.focus();
+        }
+      }
     });
   }
 
