@@ -139,8 +139,27 @@
     return seq;
   }
 
+  function syncFailureMessage(err) {
+    var code = String(err && err.code || "");
+    var msg = String((err && (err.message || err.details)) || err || "");
+    if (/Failed to fetch|NetworkError|network|offline/i.test(msg)) {
+      return "Unable to reach Receipt Pilot cloud right now. Your receipt is still saved on this device.";
+    }
+    if (code === "42501" || /row-level security|permission denied|not authorized/i.test(msg)) {
+      return "Cloud sync is blocked for this account. Check that your trial or subscription is active, then try again. Your receipt is still saved on this device.";
+    }
+    if (code === "23505" || /receipt_number_conflict|duplicate key|unique constraint/i.test(msg)) {
+      return "This receipt number is already used in your account. Receipt Pilot will retry with a new number. Your receipt is still saved on this device.";
+    }
+    if (code === "23502" || /null value in column/i.test(msg)) {
+      return "A required receipt field is missing, so cloud sync was skipped. Your receipt is still saved on this device.";
+    }
+    return "Unable to sync right now. Your receipt is still saved on this device.";
+  }
+
   async function upsertItems(client, record, user) {
-    await client.from("receipt_items").delete().eq("receipt_id", record.id);
+    var deleted = await client.from("receipt_items").delete().eq("receipt_id", record.id);
+    if (deleted.error) throw deleted.error;
     var items = Array.isArray(record.items) ? record.items : [];
     if (!items.length) return;
     var rows = items.map(function (it, i) {
@@ -209,7 +228,10 @@
       throw new Error("receipt_number_conflict");
     } catch (e) {
       console.warn("Receipt Pilot push failed:", (e && e.message) || e, e);
-      chip("Unable to sync right now. Your receipt is still saved on this device.", true);
+      record.syncStatus = "pending";
+      record.userId = user;
+      try { await ReceiptlyStorage.saveReceipt(record); } catch (saveErr) { /* local copy already exists */ }
+      chip(syncFailureMessage(e), true);
       if (global.ReceiptlyErrors) ReceiptlyErrors.report((e && e.message) || "push", "sync");
       return false;
     }
@@ -445,6 +467,7 @@
     }
   });
 
+  global.ReceiptlyProductSyncTest = { syncFailureMessage: syncFailureMessage };
   global.ReceiptlySync = {
     sync: sync,
     push: sync,
