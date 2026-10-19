@@ -1,16 +1,19 @@
-Receipt Pilot mobile navigation fix
+Receipt Pilot mobile navigation and Create Receipt CSS repair
 
-Cause
-- At max-width 860px, .nav-menu was forced to display:grid.
-- That later rule showed closed Sales and Business links even when .nav-drop was not open.
+Mobile navigation
+- Confirmed mobile .nav-menu is display:none unless .nav-drop.open is present.
+- Closed Sales and Business groups stay hidden.
+- Opening one group shows only that group.
 
-Fix
-- Mobile .nav-menu is display:none by default.
-- .nav-drop.open > .nav-menu remains display:grid.
-- Service worker cache bumped to receiptly-v37 so the corrected CSS is not served from the old cache.
+Create Receipt
+- Global a:hover underline no longer applies to .nav-create.
+- Hover/active/focus keep white text on darker teal.
+- Focus outline is visible.
+- Transition is disabled under prefers-reduced-motion.
+
+Cache
+- sw.js cache version is receiptly-v38 so the corrected CSS is not served from an older cache.
 
 REPLACE
 - css/styles.css
 - sw.js
-
-No HTML or JavaScript changes were required. Account button and destinations are unchanged.
