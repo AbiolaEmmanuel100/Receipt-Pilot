@@ -1,17 +1,19 @@
-Receipt Pilot replacement package
-Source: local working tree on branch main at 84b70f8
-No secrets included. No database or Worker files included.
+Receipt Pilot — expenses, inventory, and install update
+Source working tree: main at 84b70f8 plus preserved local changes.
+No secrets included. Migration 009 was not modified.
 
-Files:
-- index.html — shared navigation links added; broken QR script removed
-- records.html — shared navigation links added; broken QR script removed; existing billing script preserved
-- sales.html — shared navigation links added; existing sales-page work preserved
-- customers.html — shared navigation links added; existing billing script preserved
-- notifications.html — shared navigation links added; existing billing script preserved
-- expenses.html — new Expenses page
-- inventory.html — new Inventory page
-- js/expenses.js — Expenses page script
-- js/inventory.js — Inventory page script
+REPLACE
+- js/pwa.js — clearer Android, iPhone, desktop, and in-app install guidance
+- sw.js — cache version bumped to receiptly-v33; new pages added
 
-QR behavior:
-The missing CDN script was removed. js/receipt.js already falls back to api.qrserver.com and was not changed.
+ADD
+- expenses.html — expenses page with cloud/device save status
+- inventory.html — inventory page with archive view
+- js/expenses.js — expense create/load/edit/delete
+- js/inventory.js — product create/load/edit/archive
+- supabase/migrations/011_expenses_inventory.sql — new tables, RLS, grants
+- supabase/tests/011_expenses_inventory_test.sql — isolated-database checks
+
+NOT INCLUDED
+- Existing receipt, billing, payment, and entitlement files
+- supabase/migrations/009_apply_verified_payment.sql
