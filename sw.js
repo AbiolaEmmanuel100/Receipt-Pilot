@@ -1,5 +1,5 @@
 /* Receipt Pilot service worker — caches the app shell for offline use. */
-const CACHE = "receiptly-v32";
+const CACHE = "receiptly-v33";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -36,6 +36,10 @@ const PRECACHE = [
   "./js/templates.js",
   "./js/sales.js",
   "./sales.html",
+  "./expenses.html",
+  "./inventory.html",
+  "./js/expenses.js",
+  "./js/inventory.js",
   "./reset.html",
   "./404.html",
   "./assets/og-image.png",
