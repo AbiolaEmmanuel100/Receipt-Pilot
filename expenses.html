@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Expenses | Receipt Pilot</title>
-  <meta name="description" content="Record business expenses for Receipt Pilot. This page does not save data yet.">
+  <meta name="description" content="Record and manage business expenses in Receipt Pilot.">
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.json">
@@ -17,7 +17,9 @@
     @media (min-width: 760px) { .bm-grid { grid-template-columns: 1fr 1fr; } }
     .bm-note { color: #57534e; font-size: 0.92rem; }
     .bm-error { color: #b91c1c; min-height: 1.2em; }
+    .bm-ok { color: #0f766e; min-height: 1.2em; }
     .bm-table { overflow-x: auto; max-width: 100%; }
+    .bm-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   </style>
 </head>
 <body>
@@ -40,7 +42,8 @@
   <main class="page">
     <div class="wrap">
       <h1>Expenses</h1>
-      <p>Record a business expense. Entries stay on this page only and are not saved or synchronized yet.</p>
+      <p>Record a business expense. Signed-in expenses are saved to your account. Signed-out entries stay on this device only.</p>
+      <p class="bm-note" id="expenseStatus">Checking save location…</p>
       <form class="bm-form" id="expenseForm" novalidate>
         <div class="bm-grid">
           <div class="field"><label for="expenseDate">Expense date</label><input type="date" id="expenseDate" required></div>
@@ -83,15 +86,21 @@
               <th class="col-num">Amount</th>
               <th>Payment method</th>
               <th>Notes</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="expenseRows"></tbody>
         </table>
       </div>
-      <p class="bm-note">This is a review-only page. Nothing is saved to the browser or the database.</p>
+      <p class="bm-note">Deleting an expense asks for confirmation. Cloud saves are confirmed only after Supabase accepts them.</p>
     </div>
   </main>
+  <script src="js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/account.js"></script>
   <script src="js/ui.js"></script>
+  <script src="js/pwa.js"></script>
   <script src="js/expenses.js"></script>
 </body>
 </html>
