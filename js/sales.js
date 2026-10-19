@@ -52,6 +52,61 @@
     return ReceiptlyCalc.money(n, cur);
   }
 
+  function roundMoney(value) {
+    if (window.ReceiptlyCalc && typeof ReceiptlyCalc.roundMoney === "function") return ReceiptlyCalc.roundMoney(value);
+    var n = Number(value);
+    if (!isFinite(n)) n = 0;
+    return Math.round((n + Number.EPSILON) * 100) / 100;
+  }
+
+  function productKey(name) {
+    return String(name || "").trim();
+  }
+
+  function allocateReceipt(receipt) {
+    var calc = ReceiptlyCalc.compute(receipt.items || [], receipt.discount, receipt.taxPct, receipt.paid, receipt.shipping);
+    var lines = (calc.items || []).filter(function (line) { return productKey(line.name); });
+    var subtotal = roundMoney(calc.subtotal);
+    var grand = roundMoney(receipt.grand != null ? receipt.grand : calc.grand);
+    var paid = roundMoney(receipt.paid != null ? receipt.paid : calc.paid);
+    if (!lines.length || subtotal <= 0) return [];
+    var usedSales = 0;
+    var usedPaid = 0;
+    return lines.map(function (line, index) {
+      var last = index === lines.length - 1;
+      var sales = last ? roundMoney(grand - usedSales) : roundMoney(grand * (line.total / subtotal));
+      var collected = last ? roundMoney(paid - usedPaid) : roundMoney(paid * (line.total / subtotal));
+      usedSales = roundMoney(usedSales + sales);
+      usedPaid = roundMoney(usedPaid + collected);
+      return {
+        name: productKey(line.name),
+        qty: Number(line.qty) || 0,
+        sales: sales,
+        collected: collected,
+        outstanding: roundMoney(sales - collected)
+      };
+    });
+  }
+
+  function aggregateProducts(receipts, query) {
+    var needle = String(query || "").trim().toLowerCase();
+    var map = {};
+    (receipts || []).forEach(function (receipt) {
+      allocateReceipt(receipt).forEach(function (line) {
+        if (needle && line.name.toLowerCase().indexOf(needle) === -1) return;
+        var row = map[line.name] || { name: line.name, qty: 0, sales: 0, collected: 0, outstanding: 0 };
+        row.qty += line.qty;
+        row.sales = roundMoney(row.sales + line.sales);
+        row.collected = roundMoney(row.collected + line.collected);
+        row.outstanding = roundMoney(row.outstanding + line.outstanding);
+        map[line.name] = row;
+      });
+    });
+    return Object.keys(map).sort(function (a, b) { return a.localeCompare(b); }).map(function (key) { return map[key]; });
+  }
+
+  window.ReceiptlyProductSales = { allocateReceipt: allocateReceipt, aggregateProducts: aggregateProducts, roundMoney: roundMoney };
+
   var all = [];
   var view = "daily";
 
@@ -135,6 +190,35 @@
         "</span></td></tr>";
     }).join("") || "<tr><td colspan='7'>No receipts in this period.</td></tr>";
 
+    var productSource = list.filter(function (r) { return !r.voided && !r.refunded; });
+    var payFilter = $("#salesPayStatus") ? $("#salesPayStatus").value : "all";
+    if (payFilter !== "all") {
+      productSource = productSource.filter(function (r) { return normStatus(r.status) === payFilter; });
+    }
+    var products = aggregateProducts(productSource, $("#salesProduct") ? $("#salesProduct").value : "");
+    var productTotals = products.reduce(function (sum, row) {
+      sum.qty += row.qty;
+      sum.sales = roundMoney(sum.sales + row.sales);
+      sum.collected = roundMoney(sum.collected + row.collected);
+      sum.outstanding = roundMoney(sum.outstanding + row.outstanding);
+      return sum;
+    }, { qty: 0, sales: 0, collected: 0, outstanding: 0 });
+    if ($("#productUnits")) $("#productUnits").textContent = String(productTotals.qty);
+    if ($("#productSales")) $("#productSales").textContent = money(productTotals.sales, list.length ? list : all);
+    if ($("#productCollected")) $("#productCollected").textContent = money(productTotals.collected, list.length ? list : all);
+    if ($("#productOutstanding")) $("#productOutstanding").textContent = money(productTotals.outstanding, list.length ? list : all);
+    var productEmpty = $("#productEmpty");
+    var productWrap = $("#productTableWrap");
+    if (productEmpty) productEmpty.hidden = products.length > 0;
+    if (productWrap) productWrap.hidden = products.length === 0;
+    if ($("#productBody")) {
+      $("#productBody").innerHTML = products.map(function (row) {
+        return "<tr><td>" + ReceiptlyVal.sanitize(row.name) + "</td><td>" + row.qty + "</td><td>" +
+          money(row.sales, list.length ? list : all) + "</td><td>" + money(row.collected, list.length ? list : all) +
+          "</td><td>" + money(row.outstanding, list.length ? list : all) + "</td></tr>";
+      }).join("");
+    }
+
     var days = {};
     list.forEach(function (r) {
       days[r.date] = days[r.date] || [];
@@ -152,6 +236,35 @@
     var b = periodBounds();
     var list = all.filter(function (r) { return !r.isDraft && inRange(r, b.from, b.to); });
     ReceiptlyExport.downloadCsv(list);
+  }
+
+  function csvEscape(value) {
+    var s = String(value == null ? "" : value);
+    if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  function downloadProductCsv() {
+    var b = periodBounds();
+    var list = all.filter(function (r) { return !r.isDraft && !r.voided && !r.refunded && inRange(r, b.from, b.to); });
+    var payFilter = $("#salesPayStatus") ? $("#salesPayStatus").value : "all";
+    if (payFilter !== "all") list = list.filter(function (r) { return normStatus(r.status) === payFilter; });
+    var products = aggregateProducts(list, $("#salesProduct") ? $("#salesProduct").value : "");
+    var lines = ["Product,Quantity sold,Sales value,Amount collected,Outstanding"];
+    products.forEach(function (row) {
+      lines.push([row.name, row.qty, row.sales, row.collected, row.outstanding].map(csvEscape).join(","));
+    });
+    var totals = products.reduce(function (sum, row) {
+      sum.qty += row.qty; sum.sales += row.sales; sum.collected += row.collected; sum.outstanding += row.outstanding; return sum;
+    }, { qty: 0, sales: 0, collected: 0, outstanding: 0 });
+    lines.push("");
+    lines.push(["Total", totals.qty, roundMoney(totals.sales), roundMoney(totals.collected), roundMoney(totals.outstanding)].map(csvEscape).join(","));
+    var blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "product-sales-" + b.from + "-to-" + b.to + ".csv";
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1500);
   }
 
   function downloadPdf() {
@@ -185,7 +298,7 @@
       }).catch(function () { /* keep local sales */ });
     }
     $("#salesDay").value = iso(new Date());
-    ["salesPreset", "salesFrom", "salesTo", "salesDay"].forEach(function (id) {
+    ["salesPreset", "salesFrom", "salesTo", "salesDay", "salesPayStatus"].forEach(function (id) {
       var el = document.getElementById(id);
       if (el) el.addEventListener("change", render);
     });
@@ -196,6 +309,8 @@
       });
     });
     $("#salesCsv").addEventListener("click", downloadCsv);
+    if ($("#productCsv")) $("#productCsv").addEventListener("click", downloadProductCsv);
+    if ($("#salesProduct")) $("#salesProduct").addEventListener("input", render);
     $("#salesPdf").addEventListener("click", downloadPdf);
     render();
   });
