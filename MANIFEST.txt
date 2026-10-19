@@ -1,0 +1,17 @@
+Receipt Pilot replacement package
+Source: local working tree on branch main at 84b70f8
+No secrets included. No database or Worker files included.
+
+Files:
+- index.html — shared navigation links added; broken QR script removed
+- records.html — shared navigation links added; broken QR script removed; existing billing script preserved
+- sales.html — shared navigation links added; existing sales-page work preserved
+- customers.html — shared navigation links added; existing billing script preserved
+- notifications.html — shared navigation links added; existing billing script preserved
+- expenses.html — new Expenses page
+- inventory.html — new Inventory page
+- js/expenses.js — Expenses page script
+- js/inventory.js — Inventory page script
+
+QR behavior:
+The missing CDN script was removed. js/receipt.js already falls back to api.qrserver.com and was not changed.
