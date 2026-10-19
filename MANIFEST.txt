@@ -1,19 +1,18 @@
-Receipt Pilot — expenses, inventory, and install update
-Source working tree: main at 84b70f8 plus preserved local changes.
-No secrets included. Migration 009 was not modified.
+Receipt Pilot accounting and PWA package
 
 REPLACE
-- js/pwa.js — clearer Android, iPhone, desktop, and in-app install guidance
-- sw.js — cache version bumped to receiptly-v33; new pages added
+- index.html, records.html, sales.html, customers.html, notifications.html, expenses.html, inventory.html — Accounting navigation added
+- js/pwa.js — install dialog and browser-specific guidance
+- sw.js — cache bumped to receiptly-v34
+- js/expenses.js — existing expense cloud/device behavior preserved
 
 ADD
-- expenses.html — expenses page with cloud/device save status
-- inventory.html — inventory page with archive view
-- js/expenses.js — expense create/load/edit/delete
-- js/inventory.js — product create/load/edit/archive
-- supabase/migrations/011_expenses_inventory.sql — new tables, RLS, grants
-- supabase/tests/011_expenses_inventory_test.sql — isolated-database checks
+- accounting.html, js/accounting.js — accounting overview, payments, refunds
+- suppliers.html, js/suppliers.js — suppliers and stock purchases
+- supabase/migrations/012_accounting.sql
+- supabase/tests/012_accounting_test.sql
+- supabase/ACCOUNTING_GUIDE.md
 
 NOT INCLUDED
-- Existing receipt, billing, payment, and entitlement files
-- supabase/migrations/009_apply_verified_payment.sql
+- migrations 001–011
+- billing, payment worker, entitlement files
