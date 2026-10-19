@@ -92,25 +92,16 @@
       var qty = Number(document.getElementById("purchaseQty").value);
       var cost = Number(document.getElementById("purchaseCost").value);
       var productId = document.getElementById("purchaseProduct").value;
-      var purchase = await sb.from("stock_purchases").insert({
-        supplier_id: document.getElementById("purchaseSupplier").value || null,
-        product_id: productId,
-        quantity: qty,
-        unit_cost: cost,
-        purchased_on: document.getElementById("purchaseDate").value,
-        notes: document.getElementById("purchaseNotes").value.trim(),
-        idempotency_key: key
-      });
-      if (purchase.error) throw purchase.error;
-      var movement = await sb.rpc("record_stock_movement", {
+      var purchase = await sb.rpc("record_stock_purchase", {
+        p_supplier_id: document.getElementById("purchaseSupplier").value || null,
         p_product_id: productId,
-        p_type: "purchase",
         p_quantity: qty,
         p_unit_cost: cost,
-        p_note: "Stock purchase",
+        p_purchased_on: document.getElementById("purchaseDate").value,
+        p_notes: document.getElementById("purchaseNotes").value.trim(),
         p_idempotency_key: key
       });
-      if (movement.error) throw movement.error;
+      if (purchase.error) throw purchase.error;
       statusEl.textContent = "Stock purchase saved and inventory updated.";
       event.target.reset();
     } catch (err) {

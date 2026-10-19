@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Accounting | Receipt Pilot</title>
-  <meta name="description" content="Receipt Pilot accounting overview for sales, collections, expenses, and inventory.">
+  <meta name="description" content="Read-only Receipt Pilot accounting reports for a selected period.">
   <meta name="robots" content="noindex,nofollow">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.json">
@@ -15,12 +15,13 @@
     .acct-grid { display: grid; gap: 12px; margin: 16px 0; }
     @media (min-width: 760px) { .acct-grid { grid-template-columns: repeat(2, 1fr); } .acct-grid.wide { grid-template-columns: repeat(4, 1fr); } }
     .acct-card { background: #fff; border: 1px solid #e7e5e4; border-radius: 12px; padding: 14px; }
+    .acct-card button { background: none; border: 0; padding: 0; text-align: left; width: 100%; cursor: pointer; }
     .acct-card strong { display: block; font-size: 1.25rem; margin-top: 4px; }
-    .acct-note { color: #57534e; }
+    .acct-note, .acct-warn { color: #57534e; }
     .acct-warn { color: #9a3412; }
     .bm-form { display: grid; gap: 12px; margin: 12px 0 20px; }
     .bm-grid { display: grid; gap: 12px; }
-    @media (min-width: 760px) { .bm-grid { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 760px) { .bm-grid { grid-template-columns: 1fr 1fr 1fr; } }
     .bm-table { overflow-x: auto; }
   </style>
 </head>
@@ -34,6 +35,7 @@
         <a href="records.html">History</a>
         <a href="sales.html">Sales Records</a>
         <a href="accounting.html" class="active">Accounting</a>
+        <a href="payments.html">Payments</a>
         <a href="customers.html">Customers</a>
         <a href="expenses.html">Expenses</a>
         <a href="inventory.html">Inventory</a>
@@ -45,16 +47,19 @@
   </header>
   <main class="page">
     <div class="wrap">
-      <h1>Accounting overview</h1>
-      <p>Figures come from your saved receipts, expenses, and inventory. Sales and cash collected are shown separately.</p>
+      <h1>Accounting</h1>
+      <p>This page reports saved business records. It does not create payments, refunds, or stock changes.</p>
       <p class="acct-note" id="acctStatus">Sign in to load your accounting records.</p>
       <form class="bm-form" id="periodForm">
         <div class="bm-grid">
           <div class="field"><label for="periodPreset">Period</label>
             <select id="periodPreset">
               <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
               <option value="week">This week</option>
+              <option value="last-week">Last week</option>
               <option value="month" selected>This month</option>
+              <option value="last-month">Last month</option>
               <option value="custom">Custom range</option>
             </select>
           </div>
@@ -65,34 +70,8 @@
       </form>
       <div class="acct-grid wide" id="summaryCards"></div>
       <p class="acct-warn" id="acctWarnings"></p>
-      <h2>Receipt balances</h2>
-      <div class="bm-table"><table class="r-table"><thead><tr><th>Receipt</th><th>Customer</th><th class="col-num">Total</th><th class="col-num">Collected</th><th class="col-num">Outstanding</th><th>Status</th></tr></thead><tbody id="receiptRows"></tbody></table></div>
-      <h2>Record a customer payment</h2>
-      <form class="bm-form" id="paymentForm">
-        <div class="bm-grid">
-          <div class="field"><label for="paymentReceipt">Receipt</label><select id="paymentReceipt" required></select></div>
-          <div class="field"><label for="paymentAmount">Amount</label><input type="number" id="paymentAmount" min="0.01" step="0.01" required></div>
-          <div class="field"><label for="paymentMethod">Method</label><select id="paymentMethod"><option>Cash</option><option>Transfer</option><option>Card</option><option>Other</option></select></div>
-          <div class="field"><label for="paymentDate">Payment date</label><input type="date" id="paymentDate" required></div>
-          <div class="field"><label for="paymentReference">Reference</label><input type="text" id="paymentReference" maxlength="80"></div>
-          <div class="field"><label for="paymentNotes">Notes</label><input type="text" id="paymentNotes" maxlength="160"></div>
-        </div>
-        <p class="bm-error" id="paymentError" role="alert"></p>
-        <button class="btn btn-primary" type="submit">Save payment</button>
-      </form>
-      <h2>Record a refund</h2>
-      <form class="bm-form" id="refundForm">
-        <div class="bm-grid">
-          <div class="field"><label for="refundReceipt">Receipt</label><select id="refundReceipt"></select></div>
-          <div class="field"><label for="refundAmount">Amount</label><input type="number" id="refundAmount" min="0.01" step="0.01" required></div>
-          <div class="field"><label for="refundStatus">Status</label><select id="refundStatus"><option value="completed">Completed</option><option value="pending">Pending</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option></select></div>
-          <div class="field"><label for="refundDate">Refund date</label><input type="date" id="refundDate" required></div>
-          <div class="field"><label for="refundReason">Reason</label><input type="text" id="refundReason" maxlength="160"></div>
-        </div>
-        <p class="bm-error" id="refundError" role="alert"></p>
-        <button class="btn btn-secondary" type="submit">Save refund</button>
-      </form>
-      <p class="acct-note">Completed refunds reduce net cash. They do not change the original receipt balance or restore stock.</p>
+      <h2 id="detailTitle">Records behind the selected figure</h2>
+      <div class="bm-table"><table class="r-table"><thead id="detailHead"></thead><tbody id="detailRows"></tbody></table></div>
     </div>
   </main>
   <script src="js/config.js"></script>

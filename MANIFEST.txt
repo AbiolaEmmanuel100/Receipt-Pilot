@@ -1,18 +1,17 @@
-Receipt Pilot accounting and PWA package
+Receipt Pilot business-management package
 
 REPLACE
-- index.html, records.html, sales.html, customers.html, notifications.html, expenses.html, inventory.html — Accounting navigation added
-- js/pwa.js — install dialog and browser-specific guidance
-- sw.js — cache bumped to receiptly-v34
-- js/expenses.js — existing expense cloud/device behavior preserved
+- accounting.html, js/accounting.js — read-only period reports with drill-down
+- suppliers pages/scripts — atomic stock purchase RPC
+- js/sync.js — optional product link and idempotent sale stock deduction
+- shared navigation pages — Accounting and Payments links
+- sw.js — cache version receiptly-v35
 
 ADD
-- accounting.html, js/accounting.js — accounting overview, payments, refunds
-- suppliers.html, js/suppliers.js — suppliers and stock purchases
-- supabase/migrations/012_accounting.sql
-- supabase/tests/012_accounting_test.sql
-- supabase/ACCOUNTING_GUIDE.md
+- payments.html, js/payments.js — operational payments and refunds
+- supabase/migrations/013_inventory_operations.sql
+- supabase/tests/013_inventory_operations_test.sql
 
-NOT INCLUDED
+NOT MODIFIED
 - migrations 001–011
-- billing, payment worker, entitlement files
+- migration 012 was preserved and included for review
