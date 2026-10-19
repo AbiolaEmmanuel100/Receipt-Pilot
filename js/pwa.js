@@ -15,6 +15,23 @@
     return /iPhone|iPad|iPod/i.test(ua) && !window.MSStream;
   }
 
+  function isAndroid() {
+    return /Android/i.test(navigator.userAgent || "");
+  }
+
+  function isInApp() {
+    var ua = navigator.userAgent || "";
+    return /FBAN|FBAV|Instagram|Line\/|WhatsApp|Twitter|Snapchat|TikTok|wv\)/i.test(ua);
+  }
+
+  function installGuidance() {
+    if (standalone()) return "Receipt Pilot is already installed on this device.";
+    if (isInApp()) return "This in-app browser cannot install apps. Open receipt-pilot.com in Safari or Chrome, then use the browser menu to install.";
+    if (isIos()) return "On iPhone or iPad, tap Share, then choose Add to Home Screen.";
+    if (isAndroid()) return "To install on Android, open the Chrome menu and choose Install app or Add to Home screen.";
+    return "To install on desktop, open the Chrome or Edge menu and choose Install Receipt Pilot.";
+  }
+
   function dismissed(key) {
     return localStorage.getItem(key) === "1";
   }
@@ -67,8 +84,11 @@
   function setBannerMode(mode) {
     var copy = document.getElementById("installBannerCopy");
     var btn = installBtn();
-    if (mode === "ios") {
-      if (copy) copy.innerHTML = "Install Receipt Pilot — tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.";
+    if (mode === "ios" || mode === "guide") {
+      if (copy) copy.textContent = installGuidance();
+      if (btn) btn.hidden = true;
+    } else if (mode === "installed") {
+      if (copy) copy.textContent = "Receipt Pilot is already installed on this device.";
       if (btn) btn.hidden = true;
     } else {
       if (copy) copy.textContent = "Install Receipt Pilot on this device.";
@@ -106,17 +126,23 @@
   }
 
   function unsupportedMessage() {
-    if (isIos()) return "On iPhone, open Receipt Pilot in Safari, tap Share, then choose Add to Home Screen.";
-    return "This browser does not offer an in-page install prompt. Use the browser menu and look for Install app or Add to Home Screen.";
+    return installGuidance();
   }
 
   function showBtn(on) {
-    if (isIos()) showBanner(on && !dismissed(IOS_DISMISS), "ios");
-    else showBanner(on && !dismissed(DISMISS), "android");
+    if (standalone()) {
+      showBanner(false, "installed");
+      return;
+    }
+    if (isIos() || isInApp()) showBanner(on && !dismissed(IOS_DISMISS), "guide");
+    else showBanner(on && !dismissed(DISMISS), deferredPrompt ? "android" : "guide");
   }
 
   async function onInstallClick() {
-    if (standalone()) return;
+    if (standalone()) {
+      showBanner(true, "installed");
+      return;
+    }
     if (deferredPrompt) {
       deferredPrompt.prompt();
       try {
@@ -129,14 +155,8 @@
       showBanner(false);
       return;
     }
-    if (isIos()) {
-      showBanner(true, "ios");
-      return;
-    }
-    showBanner(true, "android");
-    var copy = document.getElementById("installBannerCopy");
-    if (copy) copy.textContent = unsupportedMessage();
-    if (window.ReceiptlyUI && ReceiptlyUI.toast) ReceiptlyUI.toast(unsupportedMessage());
+    showBanner(true, "guide");
+    if (window.ReceiptlyUI && ReceiptlyUI.toast) ReceiptlyUI.toast(installGuidance());
   }
 
   if ("serviceWorker" in navigator) {
@@ -182,6 +202,6 @@
     }
     ensureBanner();
     ensureNavButton();
-    if (isIos() && !dismissed(IOS_DISMISS)) showBanner(true, "ios");
+    if ((isIos() || isInApp()) && !dismissed(IOS_DISMISS)) showBanner(true, "guide");
   });
 })();
