@@ -116,9 +116,16 @@
         '<button type="button" class="btn btn-primary btn-sm" id="usageBannerSignup">View plans</button>' +
         '<button type="button" class="btn btn-ghost btn-sm" id="usageBannerDismiss">Not now</button>' +
       "</div>";
-    var header = document.querySelector(".site-header");
-    if (header && header.parentNode) header.parentNode.insertBefore(banner, header.nextSibling);
-    else document.body.insertBefore(banner, document.body.firstChild);
+    var host = document.getElementById("appBanners");
+    if (!host) {
+      host = document.createElement("div");
+      host.id = "appBanners";
+      host.className = "app-banners";
+      var header = document.querySelector(".site-header");
+      if (header && header.parentNode) header.parentNode.insertBefore(host, header.nextSibling);
+      else document.body.insertBefore(host, document.body.firstChild);
+    }
+    host.insertBefore(banner, host.firstChild);
 
     var gate = document.createElement("div");
     gate.className = "save-dialog";
