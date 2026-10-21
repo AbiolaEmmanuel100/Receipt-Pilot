@@ -3,6 +3,7 @@
 <img width="1280" height="640" alt="receipt-pilot-social-preview" src="https://github.com/user-attachments/assets/6f0a89fe-b6a3-4e8d-819b-e481e452a92d" />
 
 
+
 Simple receipts. Organized records.
 
 A static website: create professional receipts, save them in the browser, search them later, print/PDF, and export CSV or a JSON backup. Optional Supabase login syncs your own records across devices.
