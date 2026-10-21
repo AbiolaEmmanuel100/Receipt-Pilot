@@ -167,7 +167,6 @@
         receipt_id: record.id,
         user_id: user,
         name: it.name || "",
-        product_id: it.productId || null,
         quantity: Number(it.qty) || 0,
         unit_price: Number(it.price) || 0,
         line_total: Number(it.total) || 0,
@@ -176,14 +175,6 @@
     });
     var res = await client.from("receipt_items").insert(rows);
     if (res.error) throw res.error;
-    var linked = rows.some(function (row) { return row.product_id; });
-    if (linked) {
-      var stock = await client.rpc("apply_sale_stock", {
-        p_receipt_id: record.id,
-        p_idempotency_key: "sale-" + record.id
-      });
-      if (stock.error && !/function|schema cache|apply_sale_stock/i.test(stock.error.message || "")) throw stock.error;
-    }
   }
 
   async function pushOne(record) {
