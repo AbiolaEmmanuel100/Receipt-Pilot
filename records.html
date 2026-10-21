@@ -34,30 +34,13 @@
 <body>
   <header class="site-header">
     <div class="wrap header-inner">
-      <a class="logo" href="index.html"><img class="logo-mark" src="assets/favicon.svg" alt="">Receipt-<span>Pilot</span></a>
-      <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="siteNav" aria-label="Open menu">Menu</button>
+      <a class="logo" href="index.html">Receipt-<span>Pilot</span></a>
+      <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="siteNav">Menu</button>
       <nav class="nav" id="siteNav" aria-label="Primary">
-        <a href="index.html" class="nav-create">Create Receipt</a>
-        <div class="nav-drop">
-          <button type="button" class="nav-drop-btn active" aria-expanded="false" aria-haspopup="true">Sales</button>
-          <div class="nav-menu" role="group" aria-label="Sales">
-            <a href="records.html" class="active">Receipt History</a>
-            <a href="sales.html">Sales Records</a>
-            <a href="customers.html">Customers</a>
-            <a href="payments.html">Payments</a>
-          </div>
-        </div>
-        <div class="nav-drop">
-          <button type="button" class="nav-drop-btn" aria-expanded="false" aria-haspopup="true">Business</button>
-          <div class="nav-menu" role="group" aria-label="Business">
-            <a href="inventory.html">Inventory</a>
-            <a href="suppliers.html">Suppliers</a>
-            <a href="expenses.html">Expenses</a>
-            <a href="notifications.html">Notifications</a>
-          </div>
-        </div>
-        <a href="accounting.html">Accounting</a>
-        <a href="billing.html">Subscription</a>
+        <a href="index.html">Receipt Generator</a>
+        <a href="records.html" class="active">History</a>
+        <a href="sales.html">Sales Records</a>
+        <a href="customers.html">Customers</a>
         <a href="about.html">About</a>
         <button type="button" class="btn btn-ghost btn-sm" data-open-login>Account</button>
       </nav>
@@ -292,6 +275,7 @@
   <script src="js/errors.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" defer></script>
   <script src="js/storage.js" defer></script>
   <script src="js/phone.js" defer></script>
   <script src="js/calculations.js" defer></script>
