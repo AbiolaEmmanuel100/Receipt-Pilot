@@ -1,310 +1,72 @@
 (function (global) {
   "use strict";
 
-  var FALLBACK_PLANS = [
-    { code: "monthly", label: "Monthly", naira: 1500 },
-    { code: "quarterly", label: "Quarterly", naira: 4275 },
-    { code: "semi_annual", label: "Semi-annual", naira: 8100 },
-    { code: "annual", label: "Annual", naira: 15300 }
-  ];
-  var selected = "monthly";
-  var statusData = null;
-  var lastFocus = null;
-  var keyHandler = null;
+  var CURRENCY = {
+    NGN: { symbol: "₦", label: "NGN" },
+    USD: { symbol: "$", label: "US Dollar" },
+    GBP: { symbol: "£", label: "British Pound" },
+    EUR: { symbol: "€", label: "Euro" },
+    GHS: { symbol: "GH₵", label: "Ghanaian Cedi" },
+    KES: { symbol: "KSh", label: "Kenyan Shilling" }
+  };
 
-  function worker() {
-    return String((global.ReceiptlyConfig && ReceiptlyConfig.billingWorkerUrl) || "").replace(/\/$/, "");
+  function num(v) {
+    var n = Number(v);
+    return isFinite(n) ? n : 0;
   }
 
-  function money(naira) {
-    return "₦" + Number(naira || 0).toLocaleString();
+  function roundMoney(value) {
+    return Math.round((num(value) + Number.EPSILON) * 100) / 100;
   }
 
-  async function token() {
-    if (!global.ReceiptlyCloud || !ReceiptlyCloud.ready) return "";
-    var sb = await ReceiptlyCloud.ready();
-    if (!sb) return "";
-    var session = await sb.auth.getSession();
-    return session.data && session.data.session && session.data.session.access_token || "";
-  }
-
-  function ensureModal() {
-    if (document.getElementById("billingDialog")) return;
-    var wrap = document.createElement("div");
-    wrap.className = "save-dialog";
-    wrap.id = "billingDialog";
-    wrap.hidden = true;
-    wrap.innerHTML =
-      '<div class="card billing-card" role="dialog" aria-modal="true" aria-labelledby="billingTitle">' +
-        '<h2 id="billingTitle">Subscription</h2>' +
-        '<p id="billingModalStatus">Loading your subscription status.</p>' +
-        '<p class="hint">Renewal is manual. You start each payment. Automatic renewal is not available.</p>' +
-        '<div id="billingPlans" role="radiogroup" aria-label="Subscription plans"></div>' +
-        '<button class="btn btn-primary" type="button" id="billingCheckout">Continue to Paystack</button>' +
-        '<p id="billingModalError" class="error" role="alert"></p>' +
-        '<button class="btn btn-ghost" type="button" id="billingClose">Close</button>' +
-      "</div>";
-    document.body.appendChild(wrap);
-    wrap.addEventListener("click", function (e) {
-      if (e.target.id === "billingDialog") close();
+  function money(n, code) {
+    var c = CURRENCY[code] || CURRENCY.NGN;
+    var val = num(n);
+    var formatted = Math.abs(val).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     });
-    document.getElementById("billingClose").addEventListener("click", close);
-    document.getElementById("billingCheckout").addEventListener("click", checkout);
-    document.getElementById("billingPlans").addEventListener("change", function (e) {
-      if (e.target && e.target.name === "billingPlan") selected = e.target.value;
+    return (val < 0 ? "-" : "") + c.symbol + formatted;
+  }
+
+  function compute(items, discount, taxPct, paid, shipping) {
+    var rows = (items || []).map(function (it) {
+      var qty = Math.max(0, num(it.qty));
+      var price = Math.max(0, num(it.price));
+      return { name: it.name || "", qty: qty, price: price, total: roundMoney(qty * price) };
     });
+    var subtotal = roundMoney(rows.reduce(function (s, it) { return s + it.total; }, 0));
+    var disc = Math.max(0, roundMoney(discount));
+    if (disc > subtotal) disc = subtotal;
+    var after = roundMoney(subtotal - disc);
+    var pct = Math.max(0, num(taxPct));
+    var tax = roundMoney(after * (pct / 100));
+    var ship = Math.max(0, roundMoney(shipping));
+    var grand = roundMoney(after + tax + ship);
+    var amountPaid = Math.max(0, roundMoney(paid));
+    var balance = Math.max(0, roundMoney(grand - amountPaid));
+    var status = "UNPAID";
+    if (grand <= 0 && amountPaid <= 0) status = "UNPAID";
+    else if (amountPaid + 0.0001 >= grand) status = "PAID";
+    else if (amountPaid > 0) status = "PARTIALLY PAID";
+    return {
+      items: rows,
+      subtotal: subtotal,
+      discount: disc,
+      taxPct: pct,
+      tax: tax,
+      shipping: ship,
+      grand: grand,
+      paid: amountPaid,
+      balance: balance,
+      status: status
+    };
   }
 
-  function open() {
-    ensureModal();
-    lastFocus = document.activeElement;
-    document.getElementById("billingDialog").hidden = false;
-    if (!keyHandler) {
-      keyHandler = function (e) {
-        if (e.key === "Escape") close();
-      };
-      document.addEventListener("keydown", keyHandler);
-    }
-    load().then(function () {
-      var closeBtn = document.getElementById("billingClose");
-      if (closeBtn) closeBtn.focus();
-    });
-  }
-
-  function close() {
-    var dialog = document.getElementById("billingDialog");
-    if (dialog) dialog.hidden = true;
-    if (keyHandler) {
-      document.removeEventListener("keydown", keyHandler);
-      keyHandler = null;
-    }
-    if (lastFocus && lastFocus.focus) lastFocus.focus();
-  }
-
-  function plansFrom(data) {
-    if (data && data.plans && data.plans.length) {
-      return data.plans.map(function (p) {
-        return { code: p.code, label: p.label || p.code, naira: p.naira };
-      });
-    }
-    return FALLBACK_PLANS.slice();
-  }
-
-  function trialEndFrom(data) {
-    if (!data) return "";
-    return data.trial_ends_at || data.trialEndsAt || "";
-  }
-
-  function formatTrialDate(value) {
-    var date = new Date(value);
-    if (!value || isNaN(date.getTime())) return "";
-    return date.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
-  }
-
-  function render(plans) {
-    var box = document.getElementById("billingPlans");
-    var status = document.getElementById("billingModalStatus");
-    var checkout = document.getElementById("billingCheckout");
-    var current = statusData && statusData.subscription && statusData.subscription.plan_code;
-    if (!box || !status) return;
-    if (!statusData || statusData.signedOut) {
-      status.textContent = "Sign in from Account before choosing a plan.";
-      if (checkout) checkout.disabled = true;
-    } else if (statusData.loadError) {
-      status.textContent = "Subscription status could not be loaded.";
-      if (checkout) checkout.disabled = true;
-    } else {
-      var trialValue = trialEndFrom(statusData);
-      var trial = formatTrialDate(trialValue);
-      var sub = statusData.subscription || {};
-      status.textContent = trial
-        ? "Trial ends " + trial + ". Current status: " + (sub.status || "trial") +
-          (sub.plan_code ? " (" + sub.plan_code.replace("_", " ") + ")" : "") +
-          (sub.expires_at ? ", paid through " + formatTrialDate(sub.expires_at) : "") + "."
-        : "Trial end date is not available for this account. Current status: " + (sub.status || "trial") + ".";
-      if (checkout) checkout.disabled = false;
-    }
-    box.innerHTML = plans.map(function (p) {
-      var currentMark = current === p.code ? " — current plan" : "";
-      return '<label class="billing-plan">' +
-        '<input type="radio" name="billingPlan" value="' + p.code + '"' + (selected === p.code ? " checked" : "") + ">" +
-        "<span>" + p.label + " — " + money(p.naira) + currentMark + "</span>" +
-      "</label>";
-    }).join("");
-  }
-
-  async function load() {
-    var error = document.getElementById("billingModalError");
-    if (error) error.textContent = "";
-    var access = await token();
-    if (!access) {
-      statusData = { signedOut: true };
-      render(FALLBACK_PLANS);
-      return;
-    }
-    var base = worker();
-    if (!base) {
-      if (error) error.textContent = "Billing Worker is not configured.";
-      render(FALLBACK_PLANS);
-      return;
-    }
-    try {
-      var res = await fetch(base + "/api/billing/status", { headers: { Authorization: "Bearer " + access } });
-      var data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Could not load status.");
-      statusData = data;
-      render(plansFrom(data));
-    } catch (e) {
-      statusData = { loadError: true };
-      if (error) error.textContent = e.message || "Could not load subscription status.";
-      render(FALLBACK_PLANS);
-    }
-  }
-
-  async function checkout() {
-    var error = document.getElementById("billingModalError");
-    if (error) error.textContent = "";
-    var base = worker();
-    if (!base) {
-      if (error) error.textContent = "Billing Worker is not configured.";
-      return;
-    }
-    var access = await token();
-    if (!access) {
-      if (error) error.textContent = "Sign in before paying.";
-      if (global.ReceiptlyAccount && ReceiptlyAccount.showLogin) ReceiptlyAccount.showLogin();
-      return;
-    }
-    var btn = document.getElementById("billingCheckout");
-    if (btn) btn.disabled = true;
-    try {
-      var res = await fetch(base + "/api/billing/checkout", {
-        method: "POST",
-        headers: { Authorization: "Bearer " + access, "Content-Type": "application/json" },
-        body: JSON.stringify({ plan_code: selected, renewal_mode: "manual" })
-      });
-      var data = await res.json();
-      if (!res.ok || !data.authorization_url) {
-        if (error) error.textContent = data.error || "Checkout could not be started.";
-        if (btn) btn.disabled = false;
-        return;
-      }
-      location.href = data.authorization_url;
-    } catch (e) {
-      if (error) error.textContent = "Checkout could not be started.";
-      if (btn) btn.disabled = false;
-    }
-  }
-
-  function wirePage() {
-    var form = document.getElementById("billingForm");
-    if (!form) return;
-    var status = document.getElementById("billingStatus");
-    var error = document.getElementById("billingError");
-    if (new URLSearchParams(location.search).get("reference") && status) {
-      status.textContent = "Returned from Paystack. Checking the payment with the server.";
-      verifyReturnedPayment();
-    }
-    form.addEventListener("submit", async function (e) {
-      e.preventDefault();
-      if (error) error.textContent = "";
-      var base = worker();
-      if (!base) {
-        if (error) error.textContent = "Billing Worker is not configured.";
-        return;
-      }
-      var access = await token();
-      if (!access) {
-        if (error) error.textContent = "Sign in before paying.";
-        return;
-      }
-      var plan = document.querySelector("input[name=plan]:checked");
-      var res = await fetch(base + "/api/billing/checkout", {
-        method: "POST",
-        headers: { Authorization: "Bearer " + access, "Content-Type": "application/json" },
-        body: JSON.stringify({ plan_code: plan ? plan.value : "monthly", renewal_mode: "manual" })
-      });
-      var data = await res.json();
-      if (!res.ok || !data.authorization_url) {
-        if (error) error.textContent = data.error || "Checkout could not be started.";
-        return;
-      }
-      location.href = data.authorization_url;
-    });
-    loadPageStatus();
-  }
-
-  async function verifyReturnedPayment() {
-    var status = document.getElementById("billingStatus");
-    var error = document.getElementById("billingError");
-    var reference = new URLSearchParams(location.search).get("reference");
-    if (!reference) return;
-    var base = worker();
-    var access = await token();
-    if (!base || !access) {
-      if (status) status.textContent = "Sign in to finish verifying this payment.";
-      return;
-    }
-    try {
-      var res = await fetch(base + "/api/billing/verify", {
-        method: "POST",
-        headers: { Authorization: "Bearer " + access, "Content-Type": "application/json" },
-        body: JSON.stringify({ reference: reference })
-      });
-      var data = await res.json();
-      if (!res.ok) {
-        if (error) error.textContent = data.error || "Payment could not be verified.";
-        return;
-      }
-      if (status) status.textContent = data.result === "processed" || data.result === "already_processed"
-        ? "Payment verified. Your subscription access is updated."
-        : "Payment check finished: " + (data.result || "not applied") + ".";
-      loadPageStatus();
-    } catch (e) {
-      if (error) error.textContent = "Payment could not be verified.";
-    }
-  }
-
-  async function loadPageStatus() {
-    var status = document.getElementById("billingStatus");
-    if (!status) return;
-    var access = await token();
-    if (!access) {
-      status.textContent = "Sign in from the receipt generator, then return here.";
-      return;
-    }
-    var base = worker();
-    if (!base) {
-      status.textContent = "Billing is not connected yet. The payment Worker URL is missing.";
-      return;
-    }
-    try {
-      var res = await fetch(base + "/api/billing/status", { headers: { Authorization: "Bearer " + access } });
-      var data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Could not load status.");
-      var trial = formatTrialDate(trialEndFrom(data));
-      var sub = data.subscription || {};
-      status.textContent = trial
-        ? "Trial ends " + trial + ". Subscription: " + (sub.status || "trial") +
-          (sub.expires_at ? ", paid through " + formatTrialDate(sub.expires_at) : "") + "."
-        : "Trial end date is not available for this account. Subscription: " + (sub.status || "trial") + ".";
-    } catch (e) {
-      status.textContent = e.message || "Could not load subscription status.";
-    }
-  }
-
-  document.addEventListener("click", function (e) {
-    var opener = e.target.closest && e.target.closest("[data-open-billing]");
-    if (!opener) return;
-    e.preventDefault();
-    open();
-  });
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", wirePage);
-  } else {
-    wirePage();
-  }
-
-  global.ReceiptlyBilling = { open: open, close: close, trialEndFrom: trialEndFrom, formatTrialDate: formatTrialDate };
+  global.ReceiptlyCalc = {
+    CURRENCY: CURRENCY,
+    num: num,
+    money: money,
+    compute: compute
+  };
 })(window);
