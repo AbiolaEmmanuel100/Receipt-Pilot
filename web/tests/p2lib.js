@@ -54,7 +54,15 @@ async function setup(page, opts = {}) {
     if ((u.startsWith(SUPA) || u.startsWith(WORKER)) && req.method() === 'OPTIONS') return req.respond({ status: 204, headers: cors });
     if (u.startsWith(WORKER)) {
       const p = new URL(u).pathname; calls.push(req.method() + ' ' + p);
-      if (p === '/api/billing/status') return json(req, 200, { trial_ends_at: TRIAL_END, subscription: { status: 'trial' } });
+      if (p === '/api/billing/status') {
+        if (opts.statusError) return json(req, opts.statusError.code || 502, opts.statusError.body || { error: 'Could not read the trial date.' });
+        if (opts.paid) return json(req, 200, { trial_ends_at: opts.trialEnd || TRIAL_END, subscription: { status: 'active', plan_code: 'monthly', expires_at: opts.paidUntil || new Date(Date.now() + 30 * 86400000).toISOString() } });
+        return json(req, 200, opts.status || { trial_ends_at: opts.trialEnd !== undefined ? opts.trialEnd : TRIAL_END, subscription: { status: 'trial' } });
+      }
+      if (p === '/api/billing/verify') {
+        if (opts.verifyOk) { opts.paid = true; return json(req, 200, { result: 'processed' }); }
+        return json(req, 402, { error: 'not paid' });
+      }
       if (p === '/api/billing/plans') return json(req, 200, { plans: [{ code: 'monthly', label: 'Monthly', naira: 1500, months: 1 }, { code: 'quarterly', label: 'Quarterly', naira: 4275, months: 3 }, { code: 'semi_annual', label: 'Semi-annual', naira: 8100, months: 6 }, { code: 'annual', label: 'Annual', naira: 15300, months: 12 }] });
       if (p === '/api/billing/checkout') { calls.push('CHECKOUT!'); return json(req, 500, {}); }
       return json(req, 404, {});
@@ -71,8 +79,8 @@ async function setup(page, opts = {}) {
       if (p === '/auth/v1/logout') return req.respond({ status: 204, headers: cors });
       if (p === '/rest/v1/rpc/get_shared_receipt') { let tok = ''; try { tok = JSON.parse(req.postData() || '{}').share; } catch (e) {} const hit = (opts.shared || []).find((r) => r.shareToken === tok); return json(req, 200, hit || null); }
       if (req.method() !== 'GET') return req.respond({ status: 204, headers: cors });
-      if (p === '/rest/v1/usage') return one({ trial_ends_at: TRIAL_END, last_active_at: new Date().toISOString() });
-      if (p === '/rest/v1/subscriptions') return one({ status: 'trial', expires_at: null, plan_code: null, renewal_mode: null });
+      if (p === '/rest/v1/usage') return one({ trial_ends_at: opts.trialEnd || TRIAL_END, last_active_at: new Date().toISOString() });
+      if (p === '/rest/v1/subscriptions') return one(opts.paid ? { status: 'active', expires_at: opts.paidUntil || new Date(Date.now() + 30 * 86400000).toISOString(), plan_code: 'monthly', renewal_mode: 'manual' } : { status: 'trial', expires_at: null, plan_code: null, renewal_mode: null });
       if (p === '/rest/v1/profiles') return one({ deletion_requested_at: null, purge_after: null });
       return json(req, 200, obj ? null : []);
     }

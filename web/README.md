@@ -17,6 +17,14 @@ Phase 2 (Supabase and the billing Worker are mocked in `tests/p2lib.js`; checkou
 `tests/p2dash.js` (dashboard figures vs seeded receipts + screenshots), `tests/p2parity.js` (sales + customers vs the old
 pages — serve the repo root on :3001), `tests/p2history_auth.js` (history search/open/re-download/share, sign-in redirects,
 email-link forwarding, old URLs), `tests/p2lh.mjs` (Lighthouse mobile on signed-in `/app` and `/records`; `npm i --no-save lighthouse`).
+`tests/p3plan.js` (plan notice rules with mocked `/api/billing/status`: daily notice, final 2 days, expired, paid, status error, verify).
+
+Plan notice (`lib/planStatus.ts`, `PlanNotice` in `components/app/AccessLayer.tsx`), read-only from `GET /api/billing/status`:
+more than 2 Africa/Lagos calendar days left (trial or paid) → small fixed notice at most once a day per user
+(`localStorage rp_plan_notice_<userId>`); 2 days or less, or ended → on every page view until the status shows an active
+paid plan ("Close" hides it for that view only); missing/unreadable dates or a status error → nothing shown (console only).
+It is position-fixed (no layout shift) and stays hidden while the existing paywall is open. Access rules are unchanged
+(`AccessGate`, same rules as before). The billing page shares each status it loads, so a verify clears the prompt at once.
 
 ## Routes
 
