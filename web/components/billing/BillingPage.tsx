@@ -115,7 +115,7 @@ export function BillingPage() {
         <p className="text-sm text-muted">The charge is always in Nigerian Naira. Local currency display is an estimate only.</p>
 
         <p id="billingError" role="alert" className={cx("text-[15px] font-semibold text-danger", !error && "sr-only")}>{error}</p>
-        <div className="sticky bottom-[calc(68px+env(safe-area-inset-bottom))] z-20 -mx-4 border-t border-line bg-white/95 px-4 py-3 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:p-0">
+        <div className="sticky bottom-[calc(68px+env(safe-area-inset-bottom))] z-20 -mx-4 border-t border-line bg-white/95 px-4 py-3 backdrop-blur lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:p-0">
           <Button type="submit" size="lg" block id="checkoutBtn" busy={busy === "checkout"} className="md:w-auto"><IconLock className="size-5" />Continue to Paystack</Button>
           <p className="mt-1.5 text-center text-xs text-muted md:text-left">Payments by Paystack · charged in Naira</p>
         </div>

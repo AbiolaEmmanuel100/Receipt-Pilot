@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { claimDialog, paywall, showAuth, usageGate, chip } from "@/lib/bus";
+import { claimDialog, paywall, showAuth, usageGate, chip, inlineAuthHost } from "@/lib/bus";
 import { useStore } from "@/lib/useStore";
 import { useSessionUser } from "@/lib/useSession";
 import * as U from "@/lib/usage";
@@ -99,7 +99,9 @@ export function Paywall() {
 }
 
 export function UsageGate() {
-  const open = useStore(usageGate);
+  const gate = useStore(usageGate);
+  const inline = useStore(inlineAuthHost);
+  const open = gate && !inline;
   return (
     <Modal open={open} dismissible={false} title="Create a free account to continue" size="sm">
       <div className="space-y-4">

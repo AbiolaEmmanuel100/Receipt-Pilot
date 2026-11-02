@@ -12,7 +12,7 @@ import { AuthPanels } from "./AuthPanels";
 function safeNext(raw: string | null) {
   const v = String(raw || "");
   // Only same-site paths (never a full URL), e.g. /billing or /records.
-  return /^\/(?!\/)[\w\-./?=&%#]*$/.test(v) ? v : "/new";
+  return /^\/(?!\/)[\w\-./?=&%#]*$/.test(v) ? v : "/app";
 }
 
 /**
@@ -22,7 +22,7 @@ function safeNext(raw: string | null) {
 export function SignIn() {
   const st = useStore(authDialog);
   const { user } = useSessionUser();
-  const [next, setNext] = useState("/new");
+  const [next, setNext] = useState("/app");
   const [panel, setPanel] = useState<AuthPanel>("login");
   const [checking, setChecking] = useState(true);
 
