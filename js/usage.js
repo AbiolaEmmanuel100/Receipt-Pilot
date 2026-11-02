@@ -191,14 +191,18 @@
       btn.disabled = true;
       if (note) note.textContent = "Checking your access with the server...";
       try {
-        if (global.ReceiptlyBilling && ReceiptlyBilling.refreshAccess) await ReceiptlyBilling.refreshAccess();
+        // ReceiptlyBilling.refreshAccess verifies a pending Paystack reference
+        // saved on this device (same /api/billing/verify flow as billing.html),
+        // then reloads entitlement. The reference is read first so the
+        // message can name it even after a definitive answer clears it.
+        var billing = global.ReceiptlyBilling;
+        var ref = billing && billing.pendingReference ? billing.pendingReference() : "";
+        var outcome = "";
+        if (billing && billing.refreshAccess) outcome = await billing.refreshAccess();
         else if (global.ReceiptlyAccount && ReceiptlyAccount.refreshEntitlement) await ReceiptlyAccount.refreshEntitlement();
         var u = global.ReceiptlyAccount && ReceiptlyAccount.user && ReceiptlyAccount.user();
         var state = accessState(u);
-        if (note) note.textContent = state === "ok" ? ""
-          : (u && u.entitlementError)
-          ? "Could not reach the server. Try again shortly."
-          : "No activated payment found yet for this account. Bank transfers can take a few minutes. Do not pay twice.";
+        if (note) note.textContent = refreshMessage(state, u, outcome, ref);
       } finally {
         btn.disabled = false;
       }
@@ -228,6 +232,22 @@
       gate.hidden = true;
       if (global.ReceiptlyAccount) ReceiptlyAccount.showLogin();
     });
+  }
+
+  // Paywall note after "I have paid — refresh access". outcome comes from
+  // ReceiptlyBilling.refreshAccess (verify result for a stored reference).
+  function refreshMessage(state, u, outcome, ref) {
+    if (state === "ok") return "";
+    var label = ref ? "Payment " + ref : "Your payment";
+    if (outcome === "review") return label + " needs a manual review before it can be activated. Do not pay again.";
+    if (outcome === "held") return label + " belongs to a different Receipt Pilot account. Sign in with the account that started the payment.";
+    if (outcome === "pending") return label + " is not confirmed by Paystack yet. Bank transfers can take a few minutes. Do not pay twice.";
+    if (outcome === "signed_out") return "Your session has ended. Sign in again to finish activating your payment.";
+    if (outcome === "retry") return "Could not finish checking " + (ref ? "payment " + ref : "your payment") + ". Try again shortly. Do not pay twice.";
+    if (outcome === "cleared") return label + " was not activated. Paystack did not confirm it as a successful Receipt Pilot payment.";
+    if (outcome === "applied") return "Payment verified. Loading your access...";
+    if (u && u.entitlementError) return "Could not reach the server. Try again shortly.";
+    return "No activated payment found yet for this account. Bank transfers can take a few minutes. Do not pay twice.";
   }
 
   function showPaywall(message, mode) {

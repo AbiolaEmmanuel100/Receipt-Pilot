@@ -339,7 +339,15 @@
 
   function showSignInLink(on) {
     var link = document.getElementById("billingSignIn");
-    if (link) link.hidden = !on;
+    if (!link) return;
+    link.hidden = !on;
+    // Only mention "finish activating" when a payment reference is waiting.
+    var a = link.querySelector("a");
+    if (on && a) {
+      a.textContent = (referenceFromUrl() || pendingReference())
+        ? "Sign in to finish activating your payment"
+        : "Sign in to see your plan";
+    }
   }
 
   // billing.html: verify a returned/stored reference first, then load status.
