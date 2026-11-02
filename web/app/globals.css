@@ -163,3 +163,19 @@
   body.printing .print-target .logo-wrap img { max-height: 16mm !important; max-width: 22mm !important; }
   .r-table, .r-summary, .r-foot { page-break-inside: avoid; }
 }
+
+/* Customer record document (same markup as customers.html renderDoc) */
+.cust-record-doc { background: #fff; padding: 20px; color: #111; }
+.cust-record-doc h2, .cust-record-doc h3 { margin: 8px 0; font-weight: 700; }
+.cust-record-doc h2 { font-size: 1.3rem; }
+.cust-record-doc h3 { font-size: 1.05rem; margin-top: 16px; }
+.cust-record-doc p { margin: 4px 0; }
+.cust-record-doc .logo-wrap img { max-height: 56px; max-width: 160px; object-fit: contain; }
+.cust-record-doc.hidden-logo .logo-wrap { display: none; }
+.cust-record-contact { color: #475569; font-size: 0.9rem; }
+.cust-record-summary { margin: 12px 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 16px; }
+.cust-record-doc .table-scroll { overflow-x: auto; }
+.cust-record-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.cust-record-table th, .cust-record-table td { border-bottom: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; vertical-align: top; }
+.cust-record-table th { background: #f8fafc; font-weight: 700; white-space: nowrap; }
+.cust-record-doc .hint { color: #55657a; font-size: 0.85rem; margin-top: 12px; }

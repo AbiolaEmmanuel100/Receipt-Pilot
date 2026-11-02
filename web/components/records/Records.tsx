@@ -6,7 +6,7 @@ import * as S from "@/lib/storage";
 import * as Sync from "@/lib/sync";
 import * as Ex from "@/lib/export";
 import * as Act from "@/lib/activity";
-import { AUTH_EVENT, ready, userId } from "@/lib/session";
+import { AUTH_EVENT, RECEIPTS_EVENT, ready, userId } from "@/lib/session";
 import { confirm, showAuth, toast } from "@/lib/bus";
 import { money } from "@/lib/calc";
 import { track } from "@/lib/analytics";
@@ -101,8 +101,10 @@ export function Records() {
       }
     })();
     const onAuth = () => { setViewing(null); setMenuFor(null); reload().catch(() => {}); };
+    const onChanged = () => { reload().catch(() => {}); };
     document.addEventListener(AUTH_EVENT, onAuth);
-    return () => { live = false; document.removeEventListener(AUTH_EVENT, onAuth); };
+    document.addEventListener(RECEIPTS_EVENT, onChanged);
+    return () => { live = false; document.removeEventListener(AUTH_EVENT, onAuth); document.removeEventListener(RECEIPTS_EVENT, onChanged); };
   }, [reload, loadTrash]);
 
   async function restoreIds(ids: string[]) {
@@ -243,7 +245,7 @@ export function Records() {
   const stat = (label: string, value: string, tone?: string) => (
     <div className="min-w-0 rounded-2xl border border-line bg-white p-3 shadow-soft sm:p-4">
       <p className="text-xs font-semibold text-muted sm:text-sm">{label}</p>
-      <p className={cx("tabular mt-0.5 truncate text-base font-extrabold sm:text-xl", tone)}>{value}</p>
+      <p className={cx("tabular mt-0.5 break-words text-lg font-extrabold leading-tight sm:text-xl", tone)}>{value}</p>
     </div>
   );
 
@@ -251,13 +253,13 @@ export function Records() {
     <div className="space-y-4">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight md:text-3xl">Receipts</h1>
-          <p className="text-sm text-muted">Your saved receipts, organised in one place.</p>
+          <h1 className="text-[1.75rem] font-extrabold tracking-tight md:text-3xl">Receipt history</h1>
+          <p className="text-sm text-muted">Search, open, download and share your saved receipts.</p>
         </div>
         <ButtonLink href="/new" size="sm"><IconPlus className="size-4" />New</ButtonLink>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 [&>*:first-child]:col-span-2 sm:[&>*:first-child]:col-span-1">
         {stat(active ? "Sales (filtered)" : "Total sales", moneyMix(kpi.sales, kpiSrc))}
         {stat("Paid", moneyMix(kpi.paid, kpiSrc), "text-ok")}
         {stat("Outstanding", moneyMix(kpi.outstanding, kpiSrc), kpi.outstanding > 0 ? "text-warn" : undefined)}
