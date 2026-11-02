@@ -77,6 +77,10 @@ async function setup(page, opts = {}) {
         return json(req, 400, { error: 'invalid_grant', error_description: 'Invalid login credentials', msg: 'Invalid login credentials' });
       }
       if (p === '/auth/v1/logout') return req.respond({ status: 204, headers: cors });
+      if (p === '/rest/v1/rpc/list_account_deletion_requests') {
+        if (opts.adminDeny) return json(req, 403, { code: '42501', message: 'permission denied' });
+        return json(req, 200, opts.adminRows || []);
+      }
       if (p === '/rest/v1/rpc/get_shared_receipt') { let tok = ''; try { tok = JSON.parse(req.postData() || '{}').share; } catch (e) {} const hit = (opts.shared || []).find((r) => r.shareToken === tok); return json(req, 200, hit || null); }
       if (req.method() !== 'GET') return req.respond({ status: 204, headers: cors });
       if (p === '/rest/v1/usage') return one({ trial_ends_at: opts.trialEnd || TRIAL_END, last_active_at: new Date().toISOString() });
