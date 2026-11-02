@@ -18,7 +18,7 @@ import { Toasts } from "./Toasts";
 import { ConfirmHost } from "./ConfirmHost";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { ShareSheet } from "./ShareSheet";
-import { ClaimDialog, Paywall, SyncChip, TrialBanner, UsageGate } from "./AccessLayer";
+import { AccessGate, ClaimDialog, Paywall, PlanNotice, SyncChip, UsageGate } from "./AccessLayer";
 import { InstallBanner } from "./InstallBanner";
 
 let booted = false;
@@ -143,7 +143,6 @@ export function AppShell({ children, access = true, nav = true }: { children: Re
                 {nav ? accountButton : null}
               </div>
             </header>
-            {access && nav ? <TrialBanner /> : null}
             <InstallBanner />
             <main id="main" className={cx("mx-auto w-full max-w-6xl px-4 pt-4 md:pt-8", nav ? "pb-[calc(96px+env(safe-area-inset-bottom))] lg:px-8 lg:pb-16" : "pb-16")}>
               <m.div key={path} initial={{ y: 6 }} animate={{ y: 0 }} transition={{ duration: 0.18, ease: "easeOut" }}>{children}</m.div>
@@ -212,6 +211,7 @@ export function AppShell({ children, access = true, nav = true }: { children: Re
 
         {access ? <><AuthDialog /><UsageGate /><Paywall /><ClaimDialog /><SyncChip /><ShareSheet /></> : null}
         <ConfirmHost />
+        {access && nav ? <><AccessGate /><PlanNotice /></> : null}
         <Toasts />
       </MotionConfig>
     </LazyMotion>

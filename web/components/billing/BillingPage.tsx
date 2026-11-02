@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import * as B from "@/lib/billing";
+import { publishPlanStatus } from "@/lib/planStatus";
+import { userId } from "@/lib/session";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { cx } from "@/components/ui/cx";
@@ -27,7 +29,13 @@ export function BillingPage() {
       setVerify: (t) => setVerify(t),
       setError: (t) => setError(t),
       setSignIn: (on, label) => setSignIn({ on, label }),
-      setStatus: (t) => { setStatus(t); setLoading(false); },
+      setStatus: (t, data) => {
+        // Known Worker error while a Supabase grant is being fixed: show a calm line instead (text only; logic unchanged).
+        setStatus(/^Could not read the trial date\./.test(t) ? "Couldn't check your plan right now. Use Refresh access to try again." : t);
+        setLoading(false);
+        // Share the fresh status (e.g. right after a verify) so app pages never show a stale "choose a plan" prompt.
+        if (data) publishPlanStatus(userId() || "", data);
+      },
     });
     const returned = B.referenceFromUrl();
     if (returned) B.rememberReference(returned);

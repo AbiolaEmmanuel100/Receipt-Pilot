@@ -8,6 +8,8 @@ import { money as calcMoney } from "@/lib/calc";
 import { iso, money, periodList, startOfWeek, summarize } from "@/lib/sales";
 import { useReceipts } from "@/lib/useReceipts";
 import { useSessionUser } from "@/lib/useSession";
+import { useStore } from "@/lib/useStore";
+import { planStatus, loadPlanStatus } from "@/lib/planStatus";
 import { applyFilters, DEFAULT_FILTERS, statusInfo } from "@/components/records/filters";
 import { Badge, Card } from "@/components/ui/Card";
 import { Button, buttonClass } from "@/components/ui/Button";
@@ -45,18 +47,19 @@ function Stat({ label, value, sub, tone, id }: { label: string; value: ReactNode
   );
 }
 
-type StatusState = { loading: true } | { text: string; active: boolean } | { error: string } | null;
 
 export function Dashboard() {
   const { user } = useSessionUser();
   const { rows, loaded } = useReceipts();
   const [bizName, setBizName] = useState("");
-  const [status, setStatus] = useState<StatusState>({ loading: true });
+  const plan = useStore(planStatus);
   const [hello, setHello] = useState("Welcome");
 
   useEffect(() => { setHello(greeting()); S.getBusiness().then((b) => setBizName((b && b.name) || "")).catch(() => {}); }, []);
-  const loadStatus = () => { setStatus({ loading: true }); B.fetchStatus().then((r) => setStatus(r)); };
-  useEffect(() => { loadStatus(); }, []);
+  // Same GET /api/billing/status as the billing page, shared with the plan notice (one request per page view).
+  const uid = (user && user.id) || "";
+  useEffect(() => { if (uid) loadPlanStatus(uid); }, [uid]);
+  const status = plan.state === "ok" && plan.uid === uid ? { text: B.describeStatus(plan.data) } : plan.state === "error" && plan.uid === uid ? { error: plan.error } : null;
 
   const f = useMemo(() => dashboardFigures(rows), [rows]);
   const name = bizName || (user && user.businessName) || "";
@@ -126,8 +129,8 @@ export function Dashboard() {
           <Card className="p-4 sm:p-5">
             <div className="flex items-center gap-2"><IconCard className="size-5 text-brand" /><h2 className="text-lg font-bold">Your plan</h2></div>
             <div id="dashPlan" className="mt-2 text-[15px]" aria-live="polite">
-              {!status || "loading" in status ? <div className="skeleton h-12 rounded-lg" /> :
-                "error" in status ? <><p className="text-danger">{status.error}</p><Button className="mt-2" variant="secondary" size="sm" onClick={loadStatus}>Try again</Button></> :
+              {!status ? <div className="skeleton h-12 rounded-lg" /> :
+                "error" in status ? <p className="text-muted">See Plan &amp; billing for your trial and subscription.</p> :
                 <p>{status.text}</p>}
             </div>
             <Link href="/billing" className={buttonClass("secondary", "md", "mt-3 w-full")}>Plan & billing</Link>
