@@ -57,9 +57,10 @@ const HISTORY: Item = { href: "/records", label: "History", long: "Receipt histo
 const SALES: Item = { href: "/sales", label: "Sales", long: "Sales records", icon: IconChart };
 const CUSTOMERS: Item = { href: "/customers", label: "Customers", long: "Customers", icon: IconUsers };
 const BILLING: Item = { href: "/billing", label: "Billing", long: "Plan & billing", icon: IconCard };
-const SIDEBAR = [HOME, NEW, HISTORY, SALES, CUSTOMERS, BILLING];
+const NOTIFS: Item = { href: "/notifications", label: "Notifications", long: "Notifications", icon: IconBell };
+const SIDEBAR = [HOME, NEW, HISTORY, SALES, CUSTOMERS, BILLING, NOTIFS];
 const TABS = [HOME, NEW, HISTORY, SALES];
-const MORE_PATHS = ["/customers", "/billing"];
+const MORE_PATHS = ["/customers", "/billing", "/notifications"];
 
 function isActive(path: string, href: string) {
   return path === href || path === href + ".html" || path.startsWith(href + "/");
@@ -118,9 +119,6 @@ export function AppShell({ children, access = true, nav = true }: { children: Re
                       </li>
                     );
                   })}
-                  <li>
-                    <a href="/notifications.html" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-[15px] font-semibold text-slate-600 hover:bg-slate-100 hover:text-ink"><IconBell className="size-5" />Notifications</a>
-                  </li>
                 </ul>
               </nav>
               <div className="border-t border-line p-3">
@@ -187,7 +185,7 @@ export function AppShell({ children, access = true, nav = true }: { children: Re
               {[
                 { href: "/customers", label: "Customers", icon: IconUsers },
                 { href: "/billing", label: "Plan & billing", icon: IconCard },
-                { href: "/notifications.html", label: "Notification settings", icon: IconBell, plain: true },
+                { href: "/notifications", label: "Notification settings", icon: IconBell },
                 { href: "/about", label: "About Receipt Pilot", icon: IconInfo, plain: true },
               ].map((it) => {
                 const Icon = it.icon;

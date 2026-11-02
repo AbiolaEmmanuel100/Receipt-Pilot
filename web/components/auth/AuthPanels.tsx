@@ -352,7 +352,7 @@ function AccountPanel({ inline }: { inline?: boolean }) {
       <section className={sec}>
         <h3 className="font-bold">Notification Settings</h3>
         <p className="mb-3 text-sm text-muted">Optional email, WhatsApp, and SMS receipt channels. Not connected yet.</p>
-        <ButtonLink href="/notifications.html" variant="secondary">Open Notification Settings</ButtonLink>
+        <ButtonLink href="/notifications" variant="secondary">Open Notification Settings</ButtonLink>
       </section>
       {!pending ? (
         <section className="rounded-2xl border border-red-200 bg-red-50/50 p-4">

@@ -20,3 +20,8 @@ Disallow: /records
 Disallow: /r
 Disallow: /reset
 Disallow: /signin
+Disallow: /admin
+Disallow: /notifications
+Disallow: /app
+Disallow: /sales
+Disallow: /customers

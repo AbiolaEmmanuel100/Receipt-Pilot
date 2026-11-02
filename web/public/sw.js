@@ -2,8 +2,8 @@
    - /_next/static/* is content-hashed: cache-first.
    - Pages and other same-origin files: network-first, cached copy when offline.
    - Old "receiptly-*" caches from the previous site are removed on activate. */
-const CACHE = "rp-next-v2";
-const PRECACHE = ["/app", "/new", "/records", "/sales", "/customers", "/", "/manifest.json", "/assets/favicon.svg", "/assets/icon-192.png", "/assets/icon-512.png"];
+const CACHE = "rp-next-v3";
+const PRECACHE = ["/app", "/new", "/records", "/sales", "/customers", "/notifications", "/", "/manifest.json", "/assets/favicon.svg", "/assets/icon-192.png", "/assets/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
