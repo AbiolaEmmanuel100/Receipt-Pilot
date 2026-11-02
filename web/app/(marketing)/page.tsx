@@ -7,10 +7,17 @@ import { IconLock, IconCloud, IconDownload, IconList, IconOffline, IconQr, IconR
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
-// Visitors who arrive with an auth callback, an old deep link (#generator,
-// ?edit=) or from the installed app go straight to the generator.
-const REDIRECT = `(function(){try{var l=location,s=l.search,h=l.hash,q=s+h;
-if(/access_token|error_code|token_hash|[?&#]type=|[?&]code=|[?&](edit|duplicate)=|#signin|#generator/.test(q)||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone){l.replace('/new'+s+(h==='#generator'?'':h));}}catch(e){}})();`;
+// Email links (sign-up confirmation, magic link) land on "/" because that is
+// the allow-listed Supabase redirect: send them into the app (/app), or to
+// /signin when the link carries an error. Old deep links (#generator, ?edit=)
+// go to the receipt builder; the installed app opens the dashboard.
+const REDIRECT = `(function(){try{var l=location,s=l.search,h=l.hash,q=s+h,to='';
+if(/[?&#](error|error_code)=/.test(q))to='/signin';
+else if(/access_token|token_hash|[?&#]type=|[?&]code=/.test(q))to='/app';
+else if(/^#signin$/i.test(h))to='/signin';
+else if(/[?&](edit|duplicate)=/.test(s)||h==='#generator')to='/new';
+else if((window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone)to='/app';
+if(to)l.replace(to+s+(h==='#generator'||h.toLowerCase()==='#signin'?'':h));}catch(e){}})();`;
 
 const SAMPLE = receiptHtml({
   number: "RCT-000124", date: "2026-11-02", time: "10:42", payment: "Transfer", currency: "NGN", template: "classic",

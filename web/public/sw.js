@@ -2,8 +2,8 @@
    - /_next/static/* is content-hashed: cache-first.
    - Pages and other same-origin files: network-first, cached copy when offline.
    - Old "receiptly-*" caches from the previous site are removed on activate. */
-const CACHE = "rp-next-v1";
-const PRECACHE = ["/new", "/records", "/", "/manifest.json", "/assets/favicon.svg", "/assets/icon-192.png", "/assets/icon-512.png"];
+const CACHE = "rp-next-v2";
+const PRECACHE = ["/app", "/new", "/records", "/sales", "/customers", "/", "/manifest.json", "/assets/favicon.svg", "/assets/icon-192.png", "/assets/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -45,7 +45,7 @@ self.addEventListener("fetch", (event) => {
     fetch(req).then((res) => put(req, res)).catch(() =>
       caches.match(req, { ignoreSearch: req.mode === "navigate" }).then((hit) => {
         if (hit) return hit;
-        if (req.mode === "navigate") return caches.match("/new");
+        if (req.mode === "navigate") return caches.match("/app");
         return new Response("", { status: 504, statusText: "Offline" });
       })
     )

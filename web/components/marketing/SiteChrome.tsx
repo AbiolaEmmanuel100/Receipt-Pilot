@@ -33,9 +33,9 @@ export function SiteFooter() {
         <nav aria-label="Product" className="flex flex-col">
           <p className="mb-1 text-sm font-bold uppercase tracking-wide text-white">Product</p>
           <Link prefetch={false} className={link} href="/new">Receipt generator</Link>
-          <Link prefetch={false} className={link} href="/records">Receipts</Link>
-          <a className={link} href="/sales.html">Sales records</a>
-          <a className={link} href="/customers.html">Customers</a>
+          <Link prefetch={false} className={link} href="/records">Receipt history</Link>
+          <Link prefetch={false} className={link} href="/sales">Sales records</Link>
+          <Link prefetch={false} className={link} href="/customers">Customers</Link>
         </nav>
         <nav aria-label="Company" className="flex flex-col">
           <p className="mb-1 text-sm font-bold uppercase tracking-wide text-white">Company</p>

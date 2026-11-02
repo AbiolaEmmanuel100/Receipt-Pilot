@@ -8,6 +8,7 @@ export const metadata: Metadata = {
 };
 
 // Legal copy ported verbatim from privacy-policy.html (do not edit without Abiola's sign-off).
+// 2026-11-02: CDN sentence under "Third-party scripts" updated with Abiola's approval (libraries are now bundled).
 export default function Privacy() {
   return (
     <Prose>
@@ -20,7 +21,7 @@ export default function Privacy() {
       <h2>Installed app and offline cache</h2>
       <p>If you install Receipt Pilot on a device, a service worker may cache pages and scripts so the generator and saved records can work without a network connection. That cache stays on your device. Uninstalling the app or clearing site data removes it.</p>
       <h2>Third-party scripts</h2>
-      <p>PDF download uses client-side libraries loaded from a public CDN (html2canvas and jsPDF). Those providers may receive standard technical requests such as your IP address when the files are loaded.</p>
+      <p>PDF download uses client-side libraries (html2canvas and jsPDF) that are bundled with the site and served from receipt-pilot.com, not from a public CDN. Those providers may receive standard technical requests such as your IP address when the files are loaded.</p>
       <h2>Advertising and cookies</h2>
       <p>This website is prepared for display advertising (for example Google AdSense). When ads are enabled, advertising partners may use cookies or similar technologies to serve and measure ads. We do not place ads inside the generated receipt, the printed receipt or the downloaded PDF.</p>
       <h2>Contact</h2>

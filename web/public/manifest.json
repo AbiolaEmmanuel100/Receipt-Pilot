@@ -3,7 +3,7 @@
   "name": "Receipt Pilot",
   "short_name": "Receipt Pilot",
   "description": "Create professional receipts and keep your business records.",
-  "start_url": "/new",
+  "start_url": "/app",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
