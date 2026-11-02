@@ -8,6 +8,8 @@ export function userId(): string | null { return (sessionUser && sessionUser.id)
 export function setUser(u: SessionUser | null) { sessionUser = u; }
 
 export const AUTH_EVENT = "receiptly-auth-change";
+/** Fired after local receipts change outside the current page (e.g. guest receipts claimed into the account) so open lists re-read. */
+export const RECEIPTS_EVENT = "receiptly-receipts-changed";
 
 /** Same event name as the legacy site, so behaviour is identical. */
 export function emitAuthChange() {

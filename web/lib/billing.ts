@@ -205,6 +205,39 @@ export async function resumePage() {
   await loadPageStatus();
 }
 
+/** The status sentence shown on the billing page for a /api/billing/status response. */
+export function describeStatus(data: any): string {
+  const trial = formatTrialDate(trialEndFrom(data));
+  const sub = data.subscription || {};
+  const active = sub.status === "active" && sub.expires_at && Date.now() < new Date(sub.expires_at).getTime();
+  return active
+    ? "Subscription active" + (sub.plan_code ? " (" + String(sub.plan_code).replace("_", " ") + ")" : "") + ", paid through " + formatTrialDate(sub.expires_at) + "."
+    : trial
+      ? "Trial ends " + trial + ". Subscription: " + (sub.status || "trial") + (sub.expires_at ? ", paid through " + formatTrialDate(sub.expires_at) : "") + "."
+      : "Trial end date is not available for this account. Subscription: " + (sub.status || "trial") + ".";
+}
+
+/**
+ * Read-only GET /api/billing/status (same request as the billing page) for the
+ * dashboard. Never verifies, never creates a payment.
+ */
+export async function fetchStatus(): Promise<{ text: string; data: any; active: boolean } | { error: string } | null> {
+  const access = await token();
+  if (!access) return null;
+  const base = worker();
+  if (!base) return { error: "Billing is not connected yet. The payment Worker URL is missing." };
+  try {
+    const res = await fetch(base + "/api/billing/status", { headers: { Authorization: "Bearer " + access } });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Could not load status.");
+    const sub = data.subscription || {};
+    const active = !!(sub.status === "active" && sub.expires_at && Date.now() < new Date(sub.expires_at).getTime());
+    return { text: describeStatus(data), data, active };
+  } catch (e: any) {
+    return { error: ((e && e.message) || "Could not load subscription status.") };
+  }
+}
+
 export async function loadPageStatus() {
   const sink = pageSink;
   if (!sink) return;
@@ -220,14 +253,7 @@ export async function loadPageStatus() {
     const res = await fetch(base + "/api/billing/status", { headers: { Authorization: "Bearer " + access } });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || "Could not load status.");
-    const trial = formatTrialDate(trialEndFrom(data));
-    const sub = data.subscription || {};
-    const active = sub.status === "active" && sub.expires_at && Date.now() < new Date(sub.expires_at).getTime();
-    sink.setStatus(active
-      ? "Subscription active" + (sub.plan_code ? " (" + String(sub.plan_code).replace("_", " ") + ")" : "") + ", paid through " + formatTrialDate(sub.expires_at) + "."
-      : trial
-        ? "Trial ends " + trial + ". Subscription: " + (sub.status || "trial") + (sub.expires_at ? ", paid through " + formatTrialDate(sub.expires_at) : "") + "."
-        : "Trial end date is not available for this account. Subscription: " + (sub.status || "trial") + ".", data);
+    sink.setStatus(describeStatus(data), data);
   } catch (e: any) {
     sink.setStatus(((e && e.message) || "Could not load subscription status.") + " Use Refresh access to try again.");
   }

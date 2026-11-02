@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ready as cloudReady, configured, friendlyError } from "./cloud";
-import { user, userId, setUser, emitAuthChange, resolveReady } from "./session";
+import { user, userId, setUser, emitAuthChange, resolveReady, RECEIPTS_EVENT } from "./session";
 import * as S from "./storage";
 import { sync } from "./sync";
 import { report } from "./errors";
@@ -195,7 +195,9 @@ export async function claimLocal(yes: boolean) {
     }
   }
   await S.catchUpSequence();
+  try { document.dispatchEvent(new CustomEvent(RECEIPTS_EVENT)); } catch { /* ignore */ }
   await sync();
+  try { document.dispatchEvent(new CustomEvent(RECEIPTS_EVENT)); } catch { /* ignore */ }
   toast("Receipts synced to your account.");
 }
 
