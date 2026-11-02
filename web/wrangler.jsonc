@@ -1,0 +1,12 @@
+// Used ONLY if the Cloudflare Workers Builds "Root directory" is set to `web`
+// (see web/README.md, "Switching production"). With the current root-level
+// settings this file is ignored, so the live site is unaffected.
+{
+  "name": "receipt-pilot",
+  "compatibility_date": "2026-10-14",
+  "assets": {
+    "directory": "./out",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  }
+}

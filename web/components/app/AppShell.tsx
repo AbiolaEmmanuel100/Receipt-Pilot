@@ -79,7 +79,7 @@ export function AppShell({ children, access = true }: { children: ReactNode; acc
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:shadow-lift">Skip to content</a>
         <header className="sticky top-0 z-40 border-b border-line/80 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/75">
           <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 md:h-16">
-            <Link href="/" className="rounded-lg" aria-label="Receipt Pilot home"><Wordmark /></Link>
+            <Link href="/" className="rounded-lg"><Wordmark /></Link>
             <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
               {NAV.map((n) => (
                 <NavLink key={n.href} href={n.href} active={isActive(n.href)}

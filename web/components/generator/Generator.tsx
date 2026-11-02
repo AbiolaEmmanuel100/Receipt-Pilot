@@ -677,7 +677,7 @@ export function Generator() {
             {hint ? <p className="text-sm font-semibold text-danger" role="status" id="statusHint">{hint}</p> : null}
 
             <div className="rounded-2xl border border-line">
-              <button type="button" onClick={() => setExtrasOpen((v) => !v)} aria-expanded={extrasOpen || undefined} aria-controls="extras"
+              <button type="button" onClick={() => setExtrasOpen((v) => !v)} aria-expanded={extrasOpen} aria-controls={extrasOpen ? "extras" : undefined}
                 className="flex min-h-12 w-full items-center justify-between gap-2 px-4 text-left">
                 <span><span className="font-semibold">Discount, tax &amp; delivery</span>{!extrasOpen && extrasSet ? <span className="block text-sm text-muted">{extrasSummary}</span> : null}</span>
                 <IconChevronDown className={cx("size-5 text-muted transition-transform", extrasOpen && "rotate-180")} />
@@ -699,7 +699,7 @@ export function Generator() {
                 <h2 className="text-lg font-bold">Receipt details</h2>
                 {!detailsOpen ? <p className="truncate text-sm text-muted tabular">{[f.number || "Number on save", niceDate(f.date), f.time, cur].filter(Boolean).join(" · ")}</p> : null}
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setDetailsOpen((v) => !v)} aria-expanded={detailsOpen} aria-controls="details">{detailsOpen ? "Done" : <><IconEdit className="size-4" />Edit</>}</Button>
+              <Button variant="ghost" size="sm" onClick={() => setDetailsOpen((v) => !v)} aria-expanded={detailsOpen} aria-controls={detailsOpen ? "details" : undefined}>{detailsOpen ? "Done" : <><IconEdit className="size-4" />Edit</>}</Button>
             </div>
             {detailsOpen ? (
               <div id="details" className="mt-4 grid grid-cols-2 gap-4">

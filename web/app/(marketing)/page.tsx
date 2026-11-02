@@ -50,15 +50,15 @@ export default function Home() {
       <section className="relative overflow-hidden">
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 -top-40 h-[520px] bg-[radial-gradient(60%_60%_at_70%_30%,rgba(15,118,110,0.16),transparent_70%)]" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 pb-14 pt-8 md:grid-cols-[1.05fr_1fr] md:pb-20 md:pt-16">
-          <div className="rise">
+          <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand-50 px-3 py-1 text-sm font-semibold text-brand-dark">Online receipt maker for small businesses</p>
             <h1 className="mt-4 text-[2.15rem] font-extrabold leading-[1.08] tracking-tight text-ink sm:text-5xl md:text-[3.4rem]">
               Professional receipts, <span className="text-brand">straight from your phone.</span>
             </h1>
             <p className="mt-4 max-w-xl text-lg text-slate-600">Make a receipt, send it on WhatsApp or as a PDF, and keep every sale in one place. Built for phones and slow data.</p>
             <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-              <Link href="/new" className={buttonClass("primary", "lg")}>Create a receipt</Link>
-              <Link href="/signin?mode=signup" className={buttonClass("secondary", "lg")}>Start 14-day free trial</Link>
+              <Link prefetch={false} href="/new" className={buttonClass("primary", "lg")}>Create a receipt</Link>
+              <Link prefetch={false} href="/signin?mode=signup" className={buttonClass("secondary", "lg")}>Start 14-day free trial</Link>
             </div>
             <p className="mt-3 text-sm text-muted">Then from ₦1,500 a month. Paid in Naira through Paystack.</p>
           </div>
@@ -112,7 +112,7 @@ export default function Home() {
               <h2 className="text-3xl font-extrabold tracking-tight">Simple pricing in Naira</h2>
               <p className="mt-2 max-w-2xl text-lg text-slate-600">Every account starts with a <strong className="text-ink">14-day free trial</strong>. After that, choose a plan. Renewal is manual.</p>
             </div>
-            <Link href="/signin?mode=signup" className={buttonClass("primary")}>Start free trial</Link>
+            <Link prefetch={false} href="/signin?mode=signup" className={buttonClass("primary")}>Start free trial</Link>
           </div>
           <div className="mt-8"><Pricing /></div>
           <p className="mt-4 flex items-center gap-2 text-sm text-muted"><IconLock className="size-4" />Payments by Paystack · charged in Naira</p>
@@ -139,7 +139,7 @@ export default function Home() {
             <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">Make your next receipt now</h2>
             <p className="mt-1 text-teal-50">It opens straight into the receipt form.</p>
           </div>
-          <Link href="/new" className={buttonClass("secondary", "lg", "!text-brand-deep")}>Create a receipt</Link>
+          <Link prefetch={false} href="/new" className={buttonClass("secondary", "lg", "!text-brand-deep")}>Create a receipt</Link>
         </div>
       </section>
     </>

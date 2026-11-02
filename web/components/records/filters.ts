@@ -94,7 +94,7 @@ export function moneyMix(amount: number, list: Receipt[]) {
   const codes: Record<string, boolean> = {};
   list.forEach((r) => { codes[r.currency || "NGN"] = true; });
   const keys = Object.keys(codes);
-  if (keys.length === 1) return money(amount, keys[0]);
+  if (keys.length <= 1) return money(amount, keys[0] || "NGN");
   return money(amount, "NGN") + "*";
 }
 

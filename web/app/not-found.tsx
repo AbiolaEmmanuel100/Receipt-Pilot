@@ -13,9 +13,9 @@ export default function NotFound() {
         <h1 className="mt-3 text-2xl font-extrabold">Page not found</h1>
         <p className="mt-2 text-muted">That address is not a page on Receipt Pilot.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <Link href="/new" className={buttonClass("primary")}>Receipt Generator</Link>
-          <Link href="/records" className={buttonClass("secondary")}>Receipt Records</Link>
-          <Link href="/" className={buttonClass("ghost")}>Home</Link>
+          <Link prefetch={false} href="/new" className={buttonClass("primary")}>Receipt Generator</Link>
+          <Link prefetch={false} href="/records" className={buttonClass("secondary")}>Receipt Records</Link>
+          <Link prefetch={false} href="/" className={buttonClass("ghost")}>Home</Link>
         </div>
       </main>
       <SiteFooter />
