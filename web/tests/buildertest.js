@@ -3,6 +3,7 @@ const puppeteer = require('puppeteer-core');
 const fs = require('fs');
 const base = 'http://localhost:3000';
 const out = '/workspace/next-shots/builder-tests'; fs.rmSync(out, { recursive: true, force: true }); fs.mkdirSync(out + '/dl', { recursive: true });
+const lib = require('./p2lib');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const results = []; const check = (n, ok, x) => { results.push({ n, ok: !!ok }); console.log((ok ? 'PASS ' : 'FAIL ') + n + (x ? '  ' + x : '')); };
 (async () => {
@@ -13,6 +14,7 @@ const results = []; const check = (n, ok, x) => { results.push({ n, ok: !!ok });
   await page.setViewport({ width: 1280, height: 900 });
   const errs = []; page.on('pageerror', (e) => errs.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errs.push(m.text()); });
+  const opts = {}; await lib.setup(page, opts); // mocked Supabase/Worker; guest until we sign in below
   await page.evaluateOnNewDocument(() => { localStorage.setItem('receiptly_install_dismiss', '1'); });
   await page.goto(base + '/new', { waitUntil: 'networkidle0' }); await sleep(800);
   const clickText = (t, scope = 'button,a') => page.evaluate((t, scope) => { const el = [...document.querySelectorAll(scope)].filter((b) => b.offsetParent).find((b) => b.textContent.trim() === t); if (el) { el.click(); return true; } return false; }, t, scope);
@@ -41,8 +43,15 @@ const results = []; const check = (n, ok, x) => { results.push({ n, ok: !!ok });
   check('numbering RCT-000001', rec && rec.number === 'RCT-000001');
   // Download image from saved dialog
   await clickText('Download image'); await sleep(4000);
-  // Go to records
-  await page.goto(base + '/records', { waitUntil: 'networkidle0' }); await sleep(1200);
+  // Phase 2: history is signed-in only — a guest is sent to sign-in with a return path
+  await page.goto(base + '/records', { waitUntil: 'networkidle0' }); await sleep(1500);
+  check('guest /records → /signin?next=%2Frecords', page.url() === base + '/signin?next=%2Frecords', page.url());
+  // Sign in (mocked session) and continue with the same device's receipts
+  opts.signedIn = true; await page.evaluate((s) => localStorage.setItem('receiptly-auth', JSON.stringify(s)), lib.session);
+  await page.goto(base + '/records', { waitUntil: 'networkidle0' }); await sleep(1500);
+  const asked = (await page.evaluate(() => document.body.innerText)).match(/.*sync.*/gi) || [];
+  check('signed in: offered to sync the guest receipt', await clickText('Yes, sync them'), asked.slice(0, 2).join(' | '));
+  await sleep(1500);
   const rt = await page.evaluate(() => document.body.innerText);
   check('receipt listed on /records', rt.includes('RCT-000001'));
   check('KPI total shows ₦26,500.00', rt.includes('₦26,500.00'));
@@ -66,7 +75,9 @@ const results = []; const check = (n, ok, x) => { results.push({ n, ok: !!ok });
   check('share sheet opens with WhatsApp + Copy link', sent && /WhatsApp/.test(st) && /Copy link/i.test(st));
   const tok = await page.evaluate(() => new Promise((res) => { const r = indexedDB.open('receiptly_db'); r.onsuccess = () => { const d = r.result; const tx = d.transaction(['receipts'], 'readonly'); const q = tx.objectStore('receipts').getAll(); q.onsuccess = () => res((q.result.find((x) => x.number === 'RCT-000001') || {}).shareToken || ''); }; }));
   check('share token created', tok && tok.length >= 8, tok);
-  // r page resolves local token (falls back to this device's records)
+  // Signed in: /r asks Supabase rpc get_shared_receipt (mocked here with the synced row)
+  opts.shared = [await page.evaluate(() => new Promise((res) => { const r = indexedDB.open('receiptly_db'); r.onsuccess = () => { const q = r.result.transaction(['receipts']).objectStore('receipts').getAll(); q.onsuccess = () => res(q.result.find((x) => x.number === 'RCT-000001')); }; }))];
+  // r page resolves the token (falls back to this device's records)
   await page.goto(base + '/r?t=' + tok, { waitUntil: 'networkidle0' }); await sleep(2500);
   const rp = await page.evaluate(() => ({ text: document.body.innerText, qr: !!document.querySelector('.r-verify img[src^="data:image"]') }));
   check('/r shows "Receipt Verified ✓" for the token', rp.text.includes('Receipt Verified ✓') && rp.text.includes('RCT-000001'));

@@ -64,7 +64,7 @@ const check = (name, ok, extra) => { results.push({ name, ok: !!ok }); console.l
   await page.screenshot({ path: out + '/new-hash-signin.png' });
   const navs = []; page.on('framenavigated', (f) => { if (f === page.mainFrame()) navs.push(f.url()); });
   await page.goto(base + '/?code=abc123&type=signup#x', { waitUntil: 'networkidle0' }); await sleep(600);
-  check('auth callback on / redirects to /new (query kept)', navs.some((u) => u.startsWith(base + '/new?code=abc123&type=signup')), JSON.stringify(navs));
+  check('auth callback on / redirects to /app (query kept)', navs.some((u) => u.startsWith(base + '/app?code=abc123&type=signup')), JSON.stringify(navs));
   await page.goto(base + '/#generator', { waitUntil: 'networkidle0' }); await sleep(400);
   check('old /#generator link redirects to /new', page.url() === base + '/new', page.url());
   check('no page errors', errs.length === 0, JSON.stringify(errs));

@@ -13,20 +13,30 @@ same auth storage key (`receiptly-auth`), same billing Worker endpoints and rule
 
 Browser tests (need `npm i --no-save puppeteer-core` and Chrome at /usr/bin/google-chrome):
 `tests/billingtest.js` (all /api/billing/verify outcomes, mocked), `tests/signintest.js`, `tests/buildertest.js`, `tests/nextshots.js`.
+Phase 2 (Supabase and the billing Worker are mocked in `tests/p2lib.js`; checkout is never called):
+`tests/p2dash.js` (dashboard figures vs seeded receipts + screenshots), `tests/p2parity.js` (sales + customers vs the old
+pages — serve the repo root on :3001), `tests/p2history_auth.js` (history search/open/re-download/share, sign-in redirects,
+email-link forwarding, old URLs), `tests/p2lh.mjs` (Lighthouse mobile on signed-in `/app` and `/records`; `npm i --no-save lighthouse`).
 
 ## Routes
 
 | URL | Source | Notes |
 |---|---|---|
-| `/` | `app/(marketing)/page.tsx` | Landing. Auth callbacks, `#generator`, `?edit=`/`?duplicate=` and the installed app go to `/new`. |
-| `/new` | `app/(app)/new` | Receipt builder (port of `js/app.js`). |
-| `/records` | `app/(app)/records` | Receipts list (port of `js/records.js`). `?view=<id>` supported. |
-| `/signin` | `app/(app)/signin` | `?mode=signup`, `?next=/path`. |
+| `/` | `app/(marketing)/page.tsx` | Landing. Email links (`?code=`, `#access_token=`, `token_hash`, `type=`) and the installed app go to `/app`; link errors go to `/signin`; `#signin` → `/signin`; `#generator`, `?edit=`/`?duplicate=` → `/new`. |
+| `/app` | `app/(app)/app` | Dashboard (sign-in required). Figures come only from the user's receipts (same rules as `js/sales.js`); plan card uses `GET /api/billing/status`. |
+| `/new` | `app/(app)/new` | Receipt builder (port of `js/app.js`). Open to guests (first-session rules unchanged). |
+| `/records` (`/records.html`) | `app/(app)/records` | Receipt history (port of `js/records.js`, sign-in required). `?view=<id>` supported. |
+| `/sales` (`/sales.html`) | `app/(app)/sales` | Sales records, native port of `sales.html` + `js/sales.js` (sign-in required). |
+| `/customers` (`/customers.html`) | `app/(app)/customers` | Customers, native port of `customers.html` (sign-in required). |
+| `/signin` | `app/(auth)/signin` | `?mode=signup`, `?next=/path` (default `/app`). Signed-out visits to app pages land here with `next` set. |
 | `/billing` (`/billing.html`) | `app/billing` | Paystack callback `SITE_ORIGIN/billing.html` → Cloudflare 307 → `/billing?reference=…` (query kept). |
 | `/r` (`/r.html`) | `app/r` | Receipt verification (`get_shared_receipt`). |
 | `/reset` (`/reset.html`) | `app/reset` | Password reset link target. |
 | `/about`, `/privacy-policy`, `/terms`, 404 | `app/(marketing)`, `app/not-found.tsx` | Legal copy verbatim. |
-| `/sales.html`, `/customers.html`, `/notifications.html`, `/admin.html` | copied from the repo root by `scripts/postbuild.mjs` | Legacy pages (Phase 2), with `index.html` links pointed at `/new`. |
+| `/notifications.html`, `/admin.html` | copied from the repo root by `scripts/postbuild.mjs` | Legacy pages, with `index.html` links pointed at `/app`. |
+
+Navigation: sidebar at ≥1024px; on phones a bottom tab bar (Home, New, History, Sales, More). PWA `start_url` is `/app`;
+the service worker cache is `rp-next-v2` (old caches are dropped on activate).
 
 ## Switching production (Cloudflare Workers Builds, Worker `receipt-pilot`)
 
