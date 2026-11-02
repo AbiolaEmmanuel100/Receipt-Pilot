@@ -59,10 +59,21 @@
       action.hidden = !deferredPrompt || standalone() || isIos() || isInApp();
       action.addEventListener("click", onInstallClick);
     }
-    document.getElementById("installDialogClose").addEventListener("click", function () {
+    function closeDialog() {
       dialog.remove();
+      document.removeEventListener("keydown", onKey);
       localStorage.setItem(isIos() || isInApp() ? IOS_DISMISS : DISMISS, "1");
-    });
+      // "Not now" in the dialog also hides the matching top banner.
+      var bar = banner();
+      if (bar) bar.hidden = true;
+    }
+    function onKey(e) {
+      if (e.key === "Escape") closeDialog();
+    }
+    document.addEventListener("keydown", onKey);
+    document.getElementById("installDialogClose").addEventListener("click", closeDialog);
+    var first = action && !action.hidden ? action : document.getElementById("installDialogClose");
+    if (first && first.focus) first.focus();
   }
 
   function dismissed(key) {
@@ -218,8 +229,10 @@
     e.preventDefault();
     deferredPrompt = e;
     if (!standalone() && !dismissed(DISMISS)) {
+      // Show the inline banner only. The full install dialog opens when the
+      // user taps an Install button, so it never covers the receipt form or
+      // another dialog on first load.
       showBanner(true, "android");
-      showInstallDialog();
     }
   });
 
@@ -241,7 +254,6 @@
     ensureNavButton();
     if ((isIos() || isInApp()) && !dismissed(IOS_DISMISS)) {
       showBanner(true, "guide");
-      showInstallDialog();
     }
   });
 })();

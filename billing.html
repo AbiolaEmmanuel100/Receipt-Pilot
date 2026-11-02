@@ -6,16 +6,25 @@
   <title>Subscription | Receipt Pilot</title>
   <meta name="robots" content="noindex">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f766e">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="logo" href="index.html">Receipt-<span>Pilot</span></a>
-      <nav class="nav" aria-label="Primary">
+      <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="siteNav">Menu</button>
+      <nav class="nav" id="siteNav" aria-label="Primary">
         <a href="index.html">Receipt Generator</a>
         <a href="records.html">History</a>
-        <a href="billing.html" class="active">Subscription</a>
+        <a href="sales.html">Sales Records</a>
+        <a href="customers.html">Customers</a>
+        <a href="billing.html" class="active" aria-current="page">Subscription</a>
       </nav>
     </div>
   </header>
@@ -41,12 +50,13 @@
       <p class="hint">A successful one-time payment is not consent for future charges. Receipts already saved are not deleted if access expires. Files already stored on this device cannot be removed remotely.</p>
       <button class="btn btn-primary" type="submit" id="checkoutBtn">Continue to Paystack</button>
       <button class="btn btn-secondary" type="button" id="billingRefreshPage">Refresh access</button>
-      <p id="billingError" class="error"></p>
+      <p id="billingError" class="error" role="alert"></p>
     </form>
   </main>
   <script src="js/config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.min.js"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/ui.js"></script>
   <script src="js/billing.js"></script>
 </body>
 </html>

@@ -193,13 +193,13 @@
       row.className = "item-row";
       row.innerHTML =
         '<div class="field span-full"><label>Item / Service</label>' +
-        '<input type="text" data-k="name" value="' + ReceiptlyVal.sanitize(it.name || "") + '"></div>' +
+        '<input type="text" data-k="name" aria-label="Item or service name" value="' + ReceiptlyVal.sanitize(it.name || "") + '"></div>' +
         '<div class="field"><label>Qty</label>' +
-        '<input type="number" min="0" step="1" data-k="qty" value="' + ReceiptlyVal.sanitize(it.qty == null ? 1 : it.qty) + '"></div>' +
+        '<input type="number" min="0" step="1" data-k="qty" aria-label="Quantity" value="' + ReceiptlyVal.sanitize(it.qty == null ? 1 : it.qty) + '"></div>' +
         '<div class="field"><label>Unit Price</label>' +
-        '<input type="number" min="0" step="0.01" data-k="price" value="' + ReceiptlyVal.sanitize(it.price == null ? 0 : it.price) + '"></div>' +
+        '<input type="number" min="0" step="0.01" inputmode="decimal" data-k="price" aria-label="Unit price" value="' + ReceiptlyVal.sanitize(it.price == null ? 0 : it.price) + '"></div>' +
         '<div class="field"><span class="hint">Total</span><div class="item-total" data-total="' + i + '">—</div></div>' +
-        '<div class="field"><button type="button" class="btn btn-danger btn-sm" data-del>Delete</button></div>';
+        '<div class="field"><button type="button" class="btn btn-danger btn-sm" data-del aria-label="Delete this item">Delete</button></div>';
       wrap.appendChild(row);
     });
     updateItemTotals();
