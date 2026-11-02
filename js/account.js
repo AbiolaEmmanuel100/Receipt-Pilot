@@ -440,27 +440,57 @@
     });
   }
 
+  // A failed read is never treated as "trial over" and never as access.
+  // First failure: entitlementChecked + entitlementError -> usage.js shows a
+  // "could not check, retry" screen. Later failures keep the last good result.
+  function markEntitlementError(uid) {
+    if (!sessionUser || sessionUser.id !== uid) return;
+    sessionUser.entitlementError = true;
+    if (!sessionUser.entitlementChecked) sessionUser.entitlementChecked = true;
+    if (global.ReceiptlyErrors) ReceiptlyErrors.report("entitlement_read_failed", "account");
+  }
+
   async function loadProfileExtras(uid) {
     var sb = cloudReady();
     if (!sb || !uid) return;
+    var usage, sub, prof;
     try {
-      var usage = await sb.from("usage").select("trial_ends_at, last_active_at").eq("user_id", uid).maybeSingle();
-      var sub = await sb.from("subscriptions").select("status, expires_at, plan_code, renewal_mode").eq("user_id", uid).maybeSingle();
-      var prof = await sb.from("profiles").select("deletion_requested_at, purge_after").eq("id", uid).maybeSingle();
-      if (sessionUser) {
-        sessionUser.trialEndsAt = usage.data && usage.data.trial_ends_at;
-        sessionUser.subscriptionStatus = (sub.data && sub.data.status) || "trial";
-        sessionUser.subscriptionExpiresAt = sub.data && sub.data.expires_at;
-        sessionUser.planCode = sub.data && sub.data.plan_code;
-        sessionUser.renewalMode = sub.data && sub.data.renewal_mode;
-        sessionUser.deletionRequestedAt = prof.data && prof.data.deletion_requested_at;
-        sessionUser.purgeAfter = prof.data && prof.data.purge_after;
-        sessionUser.entitlementChecked = true;
-      }
-      await sb.from("usage").update({ last_active_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("user_id", uid);
+      usage = await sb.from("usage").select("trial_ends_at, last_active_at").eq("user_id", uid).maybeSingle();
+      sub = await sb.from("subscriptions").select("status, expires_at, plan_code, renewal_mode").eq("user_id", uid).maybeSingle();
+      prof = await sb.from("profiles").select("deletion_requested_at, purge_after").eq("id", uid).maybeSingle();
     } catch (e) {
-      if (sessionUser) sessionUser.entitlementChecked = true;
+      markEntitlementError(uid);
+      return;
     }
+    if (!usage || usage.error || !sub || sub.error) {
+      markEntitlementError(uid);
+      return;
+    }
+    if (sessionUser && sessionUser.id === uid) {
+      sessionUser.entitlementError = false;
+      sessionUser.trialEndsAt = usage.data && usage.data.trial_ends_at;
+      sessionUser.subscriptionStatus = (sub.data && sub.data.status) || "trial";
+      sessionUser.subscriptionExpiresAt = sub.data && sub.data.expires_at;
+      sessionUser.planCode = sub.data && sub.data.plan_code;
+      sessionUser.renewalMode = sub.data && sub.data.renewal_mode;
+      sessionUser.deletionRequestedAt = prof && prof.data && prof.data.deletion_requested_at;
+      sessionUser.purgeAfter = prof && prof.data && prof.data.purge_after;
+      sessionUser.entitlementChecked = true;
+      sessionUser.entitlementLoadedAt = Date.now();
+    }
+    try {
+      await sb.from("usage").update({ last_active_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("user_id", uid);
+    } catch (e) { /* activity stamp only */ }
+  }
+
+  // Re-reads trial/subscription rows for the signed-in user (no payment is
+  // created) and lets usage.js repaint the banner/paywall.
+  async function refreshEntitlement() {
+    var uid = userId();
+    if (!uid) return false;
+    await loadProfileExtras(uid);
+    try { document.dispatchEvent(new CustomEvent("receiptly-auth-change")); } catch (e) { /* ignore */ }
+    return !!(sessionUser && sessionUser.entitlementChecked && !sessionUser.entitlementError);
   }
 
   var signInJob = null;
@@ -1387,8 +1417,15 @@
         sessionCheckBusy = false;
       }
     }
+    var lastEntitlementCheck = 0;
     document.addEventListener("visibilitychange", function () {
-      if (document.visibilityState === "visible") validateRemoteSession();
+      if (document.visibilityState !== "visible") return;
+      validateRemoteSession();
+      // Pick up a payment completed in another tab (throttled to 1/min).
+      if (sessionUser && Date.now() - lastEntitlementCheck > 60000) {
+        lastEntitlementCheck = Date.now();
+        refreshEntitlement();
+      }
     });
     window.addEventListener("online", function () {
       updateChip("Back online — syncing...");
@@ -1439,6 +1476,7 @@
     showLogin: function () { ensureModals(); showPanel("loginPanel"); },
     showSignup: function () { ensureModals(); showPanel("signupPanel"); },
     trialExpired: trialExpired,
+    refreshEntitlement: refreshEntitlement,
     updateChip: updateChip
   };
 })(window);

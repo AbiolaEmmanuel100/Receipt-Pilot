@@ -169,7 +169,7 @@
           "</div>" +
           '<div id="shareWa" hidden>' +
             '<div class="field"><label for="sharePhone">Customer WhatsApp number</label>' +
-            '<input id="sharePhone" type="tel" inputmode="tel" placeholder="International number, e.g. +234…">'</div>' +
+            '<input id="sharePhone" type="tel" inputmode="tel" placeholder="International number, e.g. +234…"></div>' +
             '<p class="hint">Receipt preview</p>' +
             '<div class="share-preview-wrap"><img id="shareImagePreview" alt="Receipt preview" hidden></div>' +
             '<p class="hint" id="shareWaHint">The customer receives this receipt image, using the same design as Receipt Pilot.</p>' +

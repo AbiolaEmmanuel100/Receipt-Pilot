@@ -69,6 +69,14 @@
     return false;
   }
 
+  // "unknown": not checked yet; "error": could not be checked (no access,
+  // but not shown as expired); "ok": trial or paid access; "expired".
+  function accessState(u) {
+    if (!u || !u.entitlementChecked) return "unknown";
+    if (u.entitlementError && !u.entitlementLoadedAt) return "error";
+    return entitled(u) ? "ok" : "expired";
+  }
+
   function daysLeft(u) {
     if (!u || !u.trialEndsAt) return null;
     return Math.ceil((new Date(u.trialEndsAt).getTime() - Date.now()) / 86400000);
@@ -77,14 +85,18 @@
   function canPersist() {
     if (loggedIn()) {
       var u = global.ReceiptlyAccount && ReceiptlyAccount.user && ReceiptlyAccount.user();
-      if (!u || !u.entitlementChecked) return true;
-      return entitled(u);
+      var state = accessState(u);
+      if (state === "unknown") return true;
+      return state === "ok";
     }
     initGuestSession();
     return allowGuestThisSession();
   }
 
+  var PAYWALL_TITLE = "Your free trial has ended";
+  var PAYWALL_COPY = "Your 14-day free trial is over. Choose a plan to restore access to your Receipt Pilot workspace and protected online records.";
   var trialTimer = null;
+  var bannerDismissed = false;
 
   function clearTrialTimer() {
     if (trialTimer) {
@@ -153,7 +165,7 @@
     paywall.innerHTML =
       '<div class="card billing-card">' +
         '<div class="auth-brand"><a class="logo" href="index.html">Receipt <span>Pilot</span></a></div>' +
-        '<h2 id="paywallTitle">Your free trial has ended</h2>' +
+        '<h2 id="paywallTitle">' + PAYWALL_TITLE + "</h2>" +
         '<p id="paywallCopy">Your 14-day free trial is over. Choose a plan to restore access to your Receipt Pilot workspace and protected online records.</p>' +
         '<p class="hint">Saved receipts are kept. Access returns after the payment is verified by the server. This screen cannot be dismissed to restore access.</p>' +
         '<ul class="paywall-plans">' +
@@ -163,6 +175,8 @@
           "<li>Annual — ₦15,300</li>" +
         "</ul>" +
         '<button type="button" class="btn btn-primary" id="paywallPlans">Choose a plan</button>' +
+        '<button type="button" class="btn btn-secondary" id="paywallRefresh">I have paid — refresh access</button>' +
+        '<p id="paywallRefreshStatus" class="hint" role="status"></p>' +
         '<button type="button" class="btn btn-secondary" id="paywallSignOut">Sign out</button>' +
         '<p class="hint"><a href="privacy-policy.html">Privacy</a> · <a href="terms.html">Terms</a></p>' +
       "</div>";
@@ -171,15 +185,39 @@
       if (global.ReceiptlyBilling && ReceiptlyBilling.open) ReceiptlyBilling.open();
       else location.href = "billing.html";
     });
+    document.getElementById("paywallRefresh").addEventListener("click", async function () {
+      var btn = this;
+      var note = document.getElementById("paywallRefreshStatus");
+      btn.disabled = true;
+      if (note) note.textContent = "Checking your access with the server...";
+      try {
+        if (global.ReceiptlyBilling && ReceiptlyBilling.refreshAccess) await ReceiptlyBilling.refreshAccess();
+        else if (global.ReceiptlyAccount && ReceiptlyAccount.refreshEntitlement) await ReceiptlyAccount.refreshEntitlement();
+        var u = global.ReceiptlyAccount && ReceiptlyAccount.user && ReceiptlyAccount.user();
+        var state = accessState(u);
+        if (note) note.textContent = state === "ok" ? ""
+          : (u && u.entitlementError)
+          ? "Could not reach the server. Try again shortly."
+          : "No activated payment found yet for this account. Bank transfers can take a few minutes. Do not pay twice.";
+      } finally {
+        btn.disabled = false;
+      }
+    });
     document.getElementById("paywallSignOut").addEventListener("click", function () {
       if (global.ReceiptlyAccount && ReceiptlyAccount.logout) ReceiptlyAccount.logout();
     });
 
     document.getElementById("usageBannerSignup").addEventListener("click", function () {
+      if (loggedIn()) {
+        if (global.ReceiptlyBilling && ReceiptlyBilling.open) ReceiptlyBilling.open();
+        else location.href = "billing.html";
+        return;
+      }
       banner.hidden = true;
       if (global.ReceiptlyAccount) ReceiptlyAccount.showSignup();
     });
     document.getElementById("usageBannerDismiss").addEventListener("click", function () {
+      bannerDismissed = true;
       banner.hidden = true;
     });
     document.getElementById("usageGateSignup").addEventListener("click", function () {
@@ -192,18 +230,27 @@
     });
   }
 
-  function showPaywall(message) {
+  function showPaywall(message, mode) {
     ensureUi();
     var paywall = document.getElementById("trialPaywall");
+    var title = document.getElementById("paywallTitle");
     var copy = document.getElementById("paywallCopy");
-    if (copy && message) copy.textContent = message;
+    var refresh = document.getElementById("paywallRefresh");
+    var isError = mode === "error";
+    if (title) title.textContent = isError ? "We could not check your subscription" : PAYWALL_TITLE;
+    if (copy) copy.textContent = isError
+      ? "Receipt Pilot could not reach the server to confirm your access. Your trial and payments are not affected. Try again in a moment."
+      : (message || PAYWALL_COPY);
+    if (refresh) refresh.textContent = isError ? "Try again" : "I have paid — refresh access";
     if (paywall) paywall.hidden = false;
   }
 
   function showGate() {
     if (loggedIn()) {
       var u = global.ReceiptlyAccount && ReceiptlyAccount.user && ReceiptlyAccount.user();
-      if (u && u.entitlementChecked && !entitled(u)) {
+      var state = accessState(u);
+      if (state === "error") showPaywall("", "error");
+      else if (state === "expired") {
         showPaywall(u.trialEndsAt || u.subscriptionExpiresAt
           ? "Your 14-day free trial is over. Choose a plan to restore access to your Receipt Pilot workspace and protected online records."
           : "We could not confirm an active trial. Existing dates are not reset, and a new trial is not created. Choose a plan to continue.");
@@ -221,19 +268,28 @@
     return String(n).padStart(2, "0");
   }
 
+  function hidePaywall() {
+    var paywall = document.getElementById("trialPaywall");
+    if (paywall) paywall.hidden = true;
+  }
+
   function showTrialBanner() {
     clearTrialTimer();
-    if (!loggedIn()) return;
+    if (!loggedIn()) {
+      hidePaywall();
+      return;
+    }
     var u = global.ReceiptlyAccount && ReceiptlyAccount.user && ReceiptlyAccount.user();
-    if (!u || !u.entitlementChecked) return;
+    var state = accessState(u);
+    if (state === "unknown") return;
     ensureUi();
     var banner = document.getElementById("usageBanner");
     var signup = document.getElementById("usageBannerSignup");
     var dismiss = document.getElementById("usageBannerDismiss");
     if (!banner) return;
     banner.classList.remove("usage-banner-warn");
-    if (!entitled(u)) {
-      showPaywall();
+    if (state !== "ok") {
+      showPaywall("", state === "error" ? "error" : "expired");
       banner.hidden = true;
       return;
     }
@@ -251,10 +307,6 @@
     if (signup) {
       signup.hidden = false;
       signup.textContent = "View plans";
-      signup.onclick = function () {
-        if (global.ReceiptlyBilling && ReceiptlyBilling.open) ReceiptlyBilling.open();
-        else location.href = "billing.html";
-      };
     }
     function tick() {
       var diff = end - Date.now();
@@ -283,7 +335,8 @@
       }
       banner.classList.toggle("usage-banner-warn", diff <= 3 * 86400000);
       if (dismiss) dismiss.hidden = diff <= 3 * 86400000;
-      banner.hidden = false;
+      // "Not now" hides the banner for this page view, except in the last 3 days.
+      banner.hidden = bannerDismissed && diff > 3 * 86400000;
     }
     tick();
     trialTimer = setInterval(tick, 1000);

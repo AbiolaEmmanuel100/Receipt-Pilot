@@ -21,6 +21,8 @@
   </header>
   <main class="wrap" style="padding:24px 0 48px">
     <h1>Subscription</h1>
+    <p id="billingVerify" role="status" aria-live="polite"></p>
+    <p id="billingSignIn" hidden><a class="btn btn-primary" href="index.html#signin">Sign in to finish activating your payment</a></p>
     <p id="billingStatus">Sign in to see your trial and subscription.</p>
     <p>The charge is always in Nigerian Naira. Local currency display is an estimate only.</p>
     <form id="billingForm">
@@ -38,6 +40,7 @@
       </fieldset>
       <p class="hint">A successful one-time payment is not consent for future charges. Receipts already saved are not deleted if access expires. Files already stored on this device cannot be removed remotely.</p>
       <button class="btn btn-primary" type="submit" id="checkoutBtn">Continue to Paystack</button>
+      <button class="btn btn-secondary" type="button" id="billingRefreshPage">Refresh access</button>
       <p id="billingError" class="error"></p>
     </form>
   </main>
