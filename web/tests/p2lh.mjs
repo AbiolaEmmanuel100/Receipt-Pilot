@@ -5,7 +5,7 @@ import fs from 'fs';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const { setup, seed } = require('./p2lib.js');
-const base = 'http://localhost:3000';
+const base = process.env.LH_BASE || 'http://localhost:3000';
 const out = process.env.LH_OUT || '/workspace/next-shots/phase2/lighthouse'; fs.mkdirSync(out, { recursive: true });
 const browser = await puppeteer.launch({ executablePath: '/usr/bin/google-chrome', headless: 'new', args: ['--no-sandbox'] });
 for (const path of (process.env.LH_PATHS || '/app,/records').split(',')) {

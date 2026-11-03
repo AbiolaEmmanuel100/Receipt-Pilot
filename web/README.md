@@ -21,6 +21,23 @@ email-link forwarding, old URLs), `tests/p2lh.mjs` (Lighthouse mobile on signed-
 `tests/p4pages.js` (notifications + admin vs the old pages, same mocks), `tests/p4sw.js` (old `receiptly-v34` service worker →
 new build hand-over on one origin, offline, and rollback).
 
+Design polish (branch `design-polish`): `tests/p5install.js` (phone field sizing at 320/375/414/1280 incl. long country
+names; Install app entry: Chrome `beforeinstallprompt` path, iPhone Safari guide, hidden when standalone; installability),
+`tests/audit.js` (overflow at 320/375/414/768/1280, tap targets <44px, unlabeled controls, broken images, HTTP and console
+errors; `BASE=https://receipt-pilot.com LIVE=1` audits public pages read-only), `tests/focus.js` (visible focus on every Tab
+stop), `tests/phoneshot.js` and `tests/polishshots.js` (screenshots).
+
+Design system: one font (Inter via next/font), tokens in `app/globals.css` (`@theme`), Lucide icons wrapped in
+`components/ui/Icons.tsx`, dialogs/sheets on Radix Dialog (`components/ui/Modal.tsx`, same props as before). Single-line
+controls share `controlClass` (exact 44px height). The phone field's country picker is a fixed 6.25rem (6.75rem from `sm`)
+and shows only the flag and dial code; the number input takes the rest.
+
+Install app (`lib/install.ts`, `lib/installSnippet.ts`, `components/app/Install.tsx`): an inline head script captures
+`beforeinstallprompt` before hydration. "Install app" sits in the sidebar, the More sheet and as a dismissible dashboard
+card (`receiptly_install_dismiss` / `receiptly_ios_install_dismiss` hide only the card). Chrome/Android opens the native
+prompt; iPhone/iPad Safari, in-app browsers and other browsers get a short guide sheet. Nothing shows when the app already
+runs standalone. Nothing opens on its own. Service worker cache is `rp-next-v4`.
+
 Plan notice (`lib/planStatus.ts`, `PlanNotice` in `components/app/AccessLayer.tsx`), read-only from `GET /api/billing/status`:
 more than 2 Africa/Lagos calendar days left (trial or paid) → small fixed notice at most once a day per user
 (`localStorage rp_plan_notice_<userId>`); 2 days or less, or ended → on every page view until the status shows an active

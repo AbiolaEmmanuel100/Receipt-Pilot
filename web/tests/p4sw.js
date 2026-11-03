@@ -5,6 +5,7 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const results = []; const check = (n, ok, x) => { results.push({ n, ok: !!ok }); console.log((ok ? 'PASS ' : 'FAIL ') + n + (x !== undefined ? '  ' + x : '')); };
+const CUR = (require('fs').readFileSync('/workspace/rp-site/web/public/sw.js', 'utf8').match(/const CACHE = "([^"]+)"/) || [])[1];
 const PORT = 3005, base = 'http://localhost:' + PORT;
 function serve(dir) { const p = spawn(process.execPath, ['/workspace/tools/cfserve.mjs', dir, String(PORT)], { stdio: 'ignore' }); return p; }
 (async () => {
@@ -29,9 +30,9 @@ function serve(dir) { const p = spawn(process.execPath, ['/workspace/tools/cfser
   await sleep(5000);
   await page.reload({ waitUntil: 'networkidle0' }); await sleep(2000);
   const keys = await caches();
-  check('new SW took over and old receiptly-* caches were deleted', keys.length >= 1 && keys.every((k) => k === 'rp-next-v3'), JSON.stringify(keys));
+  check('new SW took over and old receiptly-* caches were deleted', keys.length >= 1 && keys.every((k) => k === CUR), JSON.stringify(keys));
   const swSrc = await page.evaluate(() => fetch('/sw.js').then((r) => r.text()));
-  check('controller is the new /sw.js (rp-next-v3)', /\/sw\.js$/.test(await ctrl() || '') && /rp-next-v3/.test(swSrc), await ctrl());
+  check('controller is the new /sw.js (current cache)', /\/sw\.js$/.test(await ctrl() || '') && swSrc.includes(CUR), await ctrl());
   // Offline: navigation is served from the new cache, never an old-site page
   await page.goto(base + '/records', { waitUntil: 'networkidle0' }); await sleep(1500);
   srv.kill(); await sleep(800);
