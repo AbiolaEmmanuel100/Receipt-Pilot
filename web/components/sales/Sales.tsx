@@ -21,7 +21,7 @@ function Stat({ label, id, children, big }: { label: string; id: string; childre
   return (
     <div className="rounded-2xl border border-line bg-white p-4">
       <p className="text-sm font-semibold text-muted">{label}</p>
-      <p id={id} className={cx("tabular mt-1 font-extrabold tracking-tight text-ink", big ? "text-[1.35rem] sm:text-2xl" : "text-xl")}>{children}</p>
+      <p id={id} className={cx("tabular mt-1 font-bold tracking-tight text-ink", big ? "text-[1.35rem] sm:text-2xl" : "text-xl")}>{children}</p>
     </div>
   );
 }
@@ -29,7 +29,7 @@ function Stat({ label, id, children, big }: { label: string; id: string; childre
 function Fold({ title, open, children }: { title: string; open?: boolean; children: ReactNode }) {
   return (
     <details open={open} className="group rounded-card border border-line bg-white shadow-soft">
-      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 text-lg font-bold sm:px-5 [&::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 text-[17px] font-semibold sm:px-5 [&::-webkit-details-marker]:hidden">
         {title}<IconChevronDown className="size-5 text-muted transition-transform group-open:rotate-180" />
       </summary>
       <div className="border-t border-line px-4 pb-5 pt-4 sm:px-5">{children}</div>
@@ -95,7 +95,7 @@ export function Sales() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-[1.75rem] font-extrabold tracking-tight md:text-3xl">Sales records</h1>
+        <h1 className="text-[1.625rem] font-bold tracking-tight md:text-[1.875rem]">Sales records</h1>
         <p className="mt-1 max-w-2xl text-[15px] text-muted">These figures are calculated from your saved receipts. This is a sales report, not a profit or stock report.</p>
       </div>
 
@@ -204,7 +204,7 @@ export function Sales() {
                 return (
                   <div key={d} className="rounded-xl border border-line bg-bg p-3">
                     <p className="text-sm font-semibold text-muted">{d}</p>
-                    <p className="tabular text-lg font-bold">Sales {money(sub.sales, days[d])}</p>
+                    <p className="tabular text-[17px] font-semibold">Sales {money(sub.sales, days[d])}</p>
                     <p className="tabular text-sm text-slate-700">Paid {money(sub.paid, days[d])} · Yet to be paid {money(sub.outstanding, days[d])}</p>
                   </div>
                 );

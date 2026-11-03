@@ -43,7 +43,7 @@ export function SharedReceipt() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-extrabold tracking-tight">Receipt Pilot Receipt Verification</h1>
+      <h1 className="text-xl font-bold tracking-tight">Receipt Pilot Receipt Verification</h1>
       {state === "loading" ? <><p className="text-muted">Loading receipt…</p><div className="skeleton h-96 rounded-2xl" aria-hidden="true" /></> : null}
       {state === "missing" ? <p className="rounded-2xl border border-line bg-white p-6 text-center text-muted">This receipt link is invalid or no longer available.</p> : null}
       {state === "ok" && rec ? (

@@ -59,7 +59,7 @@ export default function Home() {
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 pb-14 pt-8 md:grid-cols-[1.05fr_1fr] md:pb-20 md:pt-16">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand-50 px-3 py-1 text-sm font-semibold text-brand-dark">Online receipt maker for small businesses</p>
-            <h1 className="mt-4 text-[2.15rem] font-extrabold leading-[1.08] tracking-tight text-ink sm:text-5xl md:text-[3.4rem]">
+            <h1 className="mt-4 text-[2.1rem] font-extrabold leading-[1.06] tracking-[-0.035em] text-ink sm:text-5xl md:text-[3.4rem]">
               Professional receipts, <span className="text-brand">straight from your phone.</span>
             </h1>
             <p className="mt-4 max-w-xl text-lg text-slate-600">Make a receipt, send it on WhatsApp or as a PDF, and keep every sale in one place. Built for phones and slow data.</p>
@@ -82,13 +82,13 @@ export default function Home() {
 
       <section id="features" className="scroll-mt-20 border-y border-line bg-white">
         <div className="mx-auto max-w-6xl px-4 py-14 md:py-20">
-          <h2 className="max-w-2xl text-3xl font-extrabold tracking-tight">Everything a small shop needs to give receipts</h2>
+          <h2 className="max-w-2xl text-3xl font-bold tracking-tight">Everything a small shop needs to give receipts</h2>
           <p className="mt-2 max-w-2xl text-lg text-slate-600">No accounting jargon. Just receipts your customers trust, and a record of every sale.</p>
           <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {FEATURES.map((f) => (
               <li key={f.title} className="rounded-2xl border border-line bg-bg p-5 transition-shadow hover:shadow-soft">
                 <span className="inline-flex size-11 items-center justify-center rounded-xl bg-brand-50 text-brand"><f.icon className="size-6" /></span>
-                <h3 className="mt-3 text-lg font-bold">{f.title}</h3>
+                <h3 className="mt-3 text-[17px] font-semibold">{f.title}</h3>
                 <p className="mt-1 text-[15px] text-slate-600">{f.body}</p>
               </li>
             ))}
@@ -97,7 +97,7 @@ export default function Home() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-14 md:py-20">
-        <h2 className="text-3xl font-extrabold tracking-tight">How it works</h2>
+        <h2 className="text-3xl font-bold tracking-tight">How it works</h2>
         <ol className="mt-8 grid gap-4 md:grid-cols-3">
           {[
             ["Add what you sold", "Type the items, quantity and price. Add the customer if you like."],
@@ -105,8 +105,8 @@ export default function Home() {
             ["Save and send", "Send it on WhatsApp, download a PDF or image, or print it. It is saved in your receipts."],
           ].map(([t, b], i) => (
             <li key={t} className="flex gap-4 rounded-2xl border border-line bg-white p-5">
-              <span className="tabular flex size-10 shrink-0 items-center justify-center rounded-full bg-navy text-lg font-extrabold text-white">{i + 1}</span>
-              <div><h3 className="text-lg font-bold">{t}</h3><p className="mt-1 text-[15px] text-slate-600">{b}</p></div>
+              <span className="tabular flex size-10 shrink-0 items-center justify-center rounded-full bg-navy text-lg font-bold text-white">{i + 1}</span>
+              <div><h3 className="text-[17px] font-semibold">{t}</h3><p className="mt-1 text-[15px] text-slate-600">{b}</p></div>
             </li>
           ))}
         </ol>
@@ -116,7 +116,7 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-4 py-14 md:py-20">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 className="text-3xl font-extrabold tracking-tight">Simple pricing in Naira</h2>
+              <h2 className="text-3xl font-bold tracking-tight">Simple pricing in Naira</h2>
               <p className="mt-2 max-w-2xl text-lg text-slate-600">Every account starts with a <strong className="text-ink">14-day free trial</strong>. After that, choose a plan. Renewal is manual.</p>
             </div>
             <Link prefetch={false} href="/signin?mode=signup" className={buttonClass("primary")}>Start free trial</Link>
@@ -127,7 +127,7 @@ export default function Home() {
       </section>
 
       <section className="mx-auto max-w-3xl px-4 py-14 md:py-20">
-        <h2 className="text-3xl font-extrabold tracking-tight">Questions</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Questions</h2>
         <div className="mt-6 divide-y divide-line rounded-2xl border border-line bg-white">
           {FAQ.map(([q, a]) => (
             <details key={q} className="group px-5">
@@ -143,7 +143,7 @@ export default function Home() {
       <section className="px-4 pb-16">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 rounded-3xl bg-brand px-6 py-10 text-white sm:flex-row sm:items-center md:px-10">
           <div>
-            <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">Make your next receipt now</h2>
+            <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Make your next receipt now</h2>
             <p className="mt-1 text-teal-50">It opens straight into the receipt form.</p>
           </div>
           <Link prefetch={false} href="/new" className={buttonClass("secondary", "lg", "!text-brand-deep")}>Create a receipt</Link>

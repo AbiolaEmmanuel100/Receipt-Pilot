@@ -33,7 +33,7 @@ function Channel({ id, icon, title, status, tone, children }: { id: string; icon
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="grid size-9 place-items-center rounded-full bg-brand-50 text-brand-deep">{icon}</span>
-            <h2 id={id + "-h"} className="text-lg font-bold">{title}</h2>
+            <h2 id={id + "-h"} className="text-[17px] font-semibold">{title}</h2>
           </div>
           <Badge tone={tone}>{status}</Badge>
         </div>
@@ -52,7 +52,7 @@ export function Notifications() {
   return (
     <div className="mx-auto max-w-3xl space-y-5">
       <div>
-        <h1 className="text-[1.75rem] font-extrabold tracking-tight md:text-3xl">Notification Settings</h1>
+        <h1 className="text-[1.625rem] font-bold tracking-tight md:text-[1.875rem]">Notification Settings</h1>
         <p className="mt-1 text-[15px] text-muted">Optional ways your business can send digital receipts to customers. These channels are not active until each one is properly configured and verified.</p>
       </div>
 
@@ -61,7 +61,7 @@ export function Notifications() {
       ) : !signedIn ? (
         <Card id="notifGate" className="p-5 text-center">
           <span className="mx-auto grid size-11 place-items-center rounded-full bg-brand-50 text-brand-deep"><IconLock className="size-5" /></span>
-          <h2 className="mt-3 text-lg font-bold">Sign in required</h2>
+          <h2 className="mt-3 text-[17px] font-semibold">Sign in required</h2>
           <p className="mt-1 text-[15px] text-muted">Notification settings are available to authenticated business owners.</p>
           <Button className="mt-4" onClick={() => showAuth("login")}>Account</Button>
         </Card>

@@ -84,6 +84,14 @@ export function Generator() {
   const savingRef = useRef(false);
   const [saving, setSaving] = useState(false);
   const [booted, setBooted] = useState(false);
+  // Keep the form hidden (not unmounted) until saved business/details are applied, so the business card
+  // does not visibly collapse and shift the page on load. Safety net: reveal after 1.2s regardless.
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    if (booted) { setShown(true); return; }
+    const t = setTimeout(() => setShown(true), 1200);
+    return () => clearTimeout(t);
+  }, [booted]);
   const [bizOpen, setBizOpen] = useState(true);
   const [bizMore, setBizMore] = useState(false);
   const [extrasOpen, setExtrasOpen] = useState(false);
@@ -547,14 +555,14 @@ export function Generator() {
       <div className="min-w-0">
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight md:text-3xl">{editingId ? "Edit receipt" : "New receipt"}</h1>
+            <h1 className="text-[1.625rem] font-bold tracking-tight md:text-[1.875rem]">{editingId ? "Edit receipt" : "New receipt"}</h1>
             <p className="text-sm text-muted">Fill in the sale. The receipt updates as you type.</p>
           </div>
           <ButtonLink href="/records" variant="ghost" size="sm" className="hidden sm:inline-flex"><IconList className="size-4" />Receipts</ButtonLink>
         </div>
         {editingId ? <div className="mb-4 rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-semibold text-cyan-900" role="status">Editing this receipt will update the saved record.</div> : null}
 
-        <form id="receiptForm" onSubmit={(e) => e.preventDefault()} className="space-y-4" aria-busy={!booted}>
+        <form id="receiptForm" onSubmit={(e) => e.preventDefault()} className={cx("space-y-4 transition-opacity duration-150 motion-reduce:transition-none", shown ? "opacity-100" : "invisible opacity-0")} aria-busy={!booted}>
           {/* Business */}
           <Card className="p-4 sm:p-5">
             {!bizOpen && f.bizName ? (
@@ -571,7 +579,7 @@ export function Generator() {
             ) : (
               <div className="space-y-4">
                 <div className="flex items-start justify-between gap-2">
-                  <div><h2 className="text-lg font-bold">Your business</h2><p className="text-sm text-muted">Saved for your next receipts.</p></div>
+                  <div><h2 className="text-[17px] font-semibold">Your business</h2><p className="text-sm text-muted">Saved for your next receipts.</p></div>
                   {f.bizName ? <Button variant="ghost" size="sm" onClick={() => setBizOpen(false)} aria-expanded={true}>Done</Button> : null}
                 </div>
                 <Field label="Business name" id="bizName"><Input id="bizName" autoComplete="organization" value={f.bizName} onChange={(e) => update({ bizName: e.target.value })} placeholder="e.g. Mama Tobi Foods" /></Field>
@@ -580,7 +588,7 @@ export function Generator() {
                 ) : (
                   <div className="space-y-4">
                     <Field label="Business address" id="bizAddress"><Textarea id="bizAddress" rows={2} className="min-h-16" value={f.bizAddress} onChange={(e) => update({ bizAddress: e.target.value })} /></Field>
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-4 2xl:grid-cols-2">
                       <PhoneField id="bizPhone" label="Phone" value={f.bizPhone} iso={f.bizIso} onChange={(v, iso) => update({ bizPhone: v, bizIso: iso })} />
                       <Field label="Email" id="bizEmail"><Input id="bizEmail" type="email" inputMode="email" value={f.bizEmail} onChange={(e) => update({ bizEmail: e.target.value })} /></Field>
                     </div>
@@ -609,7 +617,7 @@ export function Generator() {
 
           {/* Items */}
           <Card className="p-4 sm:p-5">
-            <h2 className="mb-3 text-lg font-bold">Items</h2>
+            <h2 className="mb-3 text-[17px] font-semibold">Items</h2>
             <ul className="space-y-3">
               {f.items.map((it, i) => {
                 const total = (data.items && data.items[i] && data.items[i].total) || 0;
@@ -625,7 +633,7 @@ export function Generator() {
                     <div className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] items-end gap-2 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
                       <div>
                         <span className="mb-1 block text-xs font-semibold text-muted" id={"qty-l-" + it.key}>Qty</span>
-                        <div className="flex items-center rounded-xl border border-line bg-white" role="group" aria-labelledby={"qty-l-" + it.key}>
+                        <div className="flex items-center rounded-[11px] border border-line bg-white transition-[border-color,box-shadow] focus-within:border-brand focus-within:ring-[3px] focus-within:ring-brand/20" role="group" aria-labelledby={"qty-l-" + it.key}>
                           <button type="button" onClick={() => step(it, -1)} aria-label="Decrease quantity" className="press inline-flex size-11 items-center justify-center text-slate-600"><IconMinus className="size-4" /></button>
                           <input aria-label="Quantity" type="number" inputMode="decimal" min={0} step={1} value={it.qty} onChange={(e) => setItem(it.key, { qty: e.target.value })}
                             className="tabular h-11 w-12 border-0 bg-transparent text-center font-semibold focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" />
@@ -647,13 +655,13 @@ export function Generator() {
 
           {/* Customer */}
           <Card className="p-4 sm:p-5">
-            <h2 className="text-lg font-bold">Customer <span className="text-sm font-semibold text-muted">(optional)</span></h2>
+            <h2 className="text-[17px] font-semibold">Customer <span className="text-sm font-semibold text-muted">(optional)</span></h2>
             <div className="mt-3 space-y-4">
               <Field label="Customer name" id="custName" hint={Object.keys(customers).length ? "Pick a previous customer to fill phone and email." : undefined}>
                 <Input id="custName" list="custNameList" autoComplete="off" value={f.custName} onChange={(e) => onCustName(e.target.value)} />
                 <datalist id="custNameList">{Object.values(customers).map((c) => c && c.name ? <option key={c.name} value={c.name} /> : null)}</datalist>
               </Field>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 2xl:grid-cols-2">
                 <PhoneField id="custPhone" label="Customer phone" value={f.custPhone} iso={f.custIso} onChange={(v, iso) => update({ custPhone: v, custIso: iso })} />
                 <Field label="Customer email" id="custEmail"><Input id="custEmail" type="email" inputMode="email" value={f.custEmail} onChange={(e) => update({ custEmail: e.target.value })} /></Field>
               </div>
@@ -662,7 +670,7 @@ export function Generator() {
 
           {/* Payment */}
           <Card className="space-y-4 p-4 sm:p-5">
-            <h2 className="text-lg font-bold">Payment</h2>
+            <h2 className="text-[17px] font-semibold">Payment</h2>
             <ChipGroup name="paymentMethod" label="Payment method" value={f.payment} options={PAY_METHODS} onChange={(v) => update({ payment: v })} />
             <ChipGroup name="paymentStatus" label="Payment status" value={f.status} options={STATUSES} onChange={(v) => update({ status: v, paid: v === "PARTIALLY PAID" ? "" : f.paid })} />
             <div className="grid grid-cols-2 gap-4">
@@ -671,7 +679,7 @@ export function Generator() {
               </Field>
               <div>
                 <span className="mb-1.5 block text-sm font-semibold">Balance due</span>
-                <output id="balanceDue" className={cx(inputClass, "tabular flex items-center bg-slate-50 font-bold")}>{money(data.balance, cur)}</output>
+                <output id="balanceDue" className={cx(inputClass, "tabular flex min-h-11 items-center bg-slate-50 font-bold")}>{money(data.balance, cur)}</output>
               </div>
             </div>
             {hint ? <p className="text-sm font-semibold text-danger" role="status" id="statusHint">{hint}</p> : null}
@@ -696,7 +704,7 @@ export function Generator() {
           <Card className="p-4 sm:p-5">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <h2 className="text-lg font-bold">Receipt details</h2>
+                <h2 className="text-[17px] font-semibold">Receipt details</h2>
                 {!detailsOpen ? <p className="truncate text-sm text-muted tabular">{[f.number || "Number on save", niceDate(f.date), f.time, cur].filter(Boolean).join(" · ")}</p> : null}
               </div>
               <Button variant="ghost" size="sm" onClick={() => setDetailsOpen((v) => !v)} aria-expanded={detailsOpen} aria-controls={detailsOpen ? "details" : undefined}>{detailsOpen ? "Done" : <><IconEdit className="size-4" />Edit</>}</Button>
@@ -715,7 +723,7 @@ export function Generator() {
 
           {/* Notes */}
           <Card className="p-4 sm:p-5">
-            <Field label={<span className="text-lg font-bold">Notes <span className="text-sm font-semibold text-muted">(optional)</span></span>} id="notes">
+            <Field label={<span className="text-[17px] font-semibold">Notes <span className="text-sm font-semibold text-muted">(optional)</span></span>} id="notes">
               <Textarea id="notes" rows={3} placeholder="Thank you message, delivery note, account details…" value={f.notes} onChange={(e) => update({ notes: e.target.value })} />
             </Field>
           </Card>
@@ -748,7 +756,7 @@ export function Generator() {
         <div className="mx-auto flex max-w-xl items-center gap-2">
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold text-muted">Total</p>
-            <p className="tabular truncate text-lg font-extrabold leading-tight">{money(data.grand, cur)}</p>
+            <p className="tabular truncate text-lg font-bold leading-tight">{money(data.grand, cur)}</p>
           </div>
           <Button variant="secondary" onClick={() => setPreviewOpen(true)}><IconEye className="size-5" />Preview</Button>
           <Button onClick={saveReceipt} busy={saving}>{saving ? "Saving…" : "Save"}</Button>

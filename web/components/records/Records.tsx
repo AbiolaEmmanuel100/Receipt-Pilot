@@ -245,7 +245,7 @@ export function Records() {
   const stat = (label: string, value: string, tone?: string) => (
     <div className="min-w-0 rounded-2xl border border-line bg-white p-3 shadow-soft sm:p-4">
       <p className="text-xs font-semibold text-muted sm:text-sm">{label}</p>
-      <p className={cx("tabular mt-0.5 break-words text-lg font-extrabold leading-tight sm:text-xl", tone)}>{value}</p>
+      <p className={cx("tabular mt-0.5 break-words text-lg font-bold leading-tight sm:text-xl", tone)}>{value}</p>
     </div>
   );
 
@@ -253,7 +253,7 @@ export function Records() {
     <div className="space-y-4">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <h1 className="text-[1.75rem] font-extrabold tracking-tight md:text-3xl">Receipt history</h1>
+          <h1 className="text-[1.625rem] font-bold tracking-tight md:text-[1.875rem]">Receipt history</h1>
           <p className="text-sm text-muted">Search, open, download and share your saved receipts.</p>
         </div>
         <ButtonLink href="/new" size="sm"><IconPlus className="size-4" />New</ButtonLink>
@@ -348,7 +348,7 @@ export function Records() {
                       <p className="tabular truncate text-sm text-muted">{r.number}{r.isDraft ? " · Draft" : ""} · {r.date}</p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="tabular font-extrabold">{money(r.grand, r.currency || "NGN")}</p>
+                      <p className="tabular font-bold">{money(r.grand, r.currency || "NGN")}</p>
                       <Badge tone={s.tone}>{s.label}</Badge>
                     </div>
                   </button>

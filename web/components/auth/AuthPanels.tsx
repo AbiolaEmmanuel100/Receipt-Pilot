@@ -20,7 +20,7 @@ function LinkBtn({ onClick, children }: { onClick: () => void; children: ReactNo
 function Heading({ title, intro }: { title: string; intro?: ReactNode }) {
   return (
     <div className="mb-4">
-      <h2 className="text-2xl font-extrabold tracking-tight text-ink">{title}</h2>
+      <h2 className="text-2xl font-bold tracking-tight text-ink">{title}</h2>
       {intro ? <p className="mt-1 text-[15px] text-muted">{intro}</p> : null}
     </div>
   );

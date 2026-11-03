@@ -15,6 +15,7 @@ import { Badge, Card } from "@/components/ui/Card";
 import { Button, buttonClass } from "@/components/ui/Button";
 import { IconArrowRight, IconCard, IconChart, IconPlus, IconReceipt, IconUsers } from "@/components/ui/Icons";
 import { cx } from "@/components/ui/cx";
+import { InstallCard } from "@/components/app/Install";
 
 function greeting(d = new Date()) {
   const h = d.getHours();
@@ -39,9 +40,9 @@ export function dashboardFigures(all: import("@/lib/types").Receipt[], now = new
 
 function Stat({ label, value, sub, tone, id }: { label: string; value: ReactNode; sub?: ReactNode; tone?: "brand" | "warn"; id: string }) {
   return (
-    <Card className="p-4">
-      <p className="text-sm font-semibold text-muted">{label}</p>
-      <p id={id} className={cx("tabular mt-1 text-[1.4rem] font-extrabold leading-tight tracking-tight sm:text-2xl", tone === "warn" ? "text-[#92400e]" : "text-ink")}>{value}</p>
+    <Card className="min-h-28 p-4">
+      <p className="text-[13px] font-medium text-muted">{label}</p>
+      <p id={id} className={cx("tabular mt-1.5 text-[1.2rem] font-bold leading-tight tracking-tight sm:text-[1.45rem]", tone === "warn" ? "text-[#92400e]" : "text-ink")}>{value}</p>
       {sub ? <p className="mt-0.5 text-sm text-muted">{sub}</p> : null}
     </Card>
   );
@@ -69,8 +70,8 @@ export function Dashboard() {
     <div className="space-y-5 md:space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[15px] font-semibold text-muted">{hello}</p>
-          <h1 id="dashName" className="truncate text-[1.75rem] font-extrabold tracking-tight md:text-3xl">{name || (user && user.email) || "Your business"}</h1>
+          <p className="text-sm font-medium text-muted">{hello}</p>
+          <h1 id="dashName" className="truncate text-[1.625rem] font-bold tracking-tight md:text-[1.875rem]">{name || (user && user.email) || "Your business"}</h1>
         </div>
         <Link href="/new" className={buttonClass("primary", "lg", "w-full sm:w-auto")}><IconPlus className="size-5" />Create receipt</Link>
       </div>
@@ -92,7 +93,7 @@ export function Dashboard() {
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Card className="p-4 sm:p-5">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <h2 className="text-lg font-bold">Recent receipts</h2>
+            <h2 className="text-[17px] font-semibold">Recent receipts</h2>
             <Link href="/records" className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-[15px] font-semibold text-brand hover:bg-brand-50">View all<IconArrowRight className="size-4" /></Link>
           </div>
           {!loaded ? <div className="skeleton h-48 rounded-xl" /> : f.recent.length ? (
@@ -101,7 +102,7 @@ export function Dashboard() {
                 const st = statusInfo(r);
                 return (
                   <li key={r.id}>
-                    <Link href={"/records?view=" + encodeURIComponent(r.id)} className="-mx-2 flex min-h-[60px] items-center gap-3 rounded-xl px-2 py-2 hover:bg-slate-50">
+                    <Link href={"/records?view=" + encodeURIComponent(r.id)} className="tap -mx-2 flex min-h-[60px] items-center gap-3 rounded-xl px-2 py-2 hover:bg-slate-50">
                       <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand" aria-hidden="true"><IconReceipt className="size-5" /></span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-semibold">{(r.customer && r.customer.name) || "Walk-in customer"}</span>
@@ -127,7 +128,7 @@ export function Dashboard() {
 
         <div className="space-y-5">
           <Card className="p-4 sm:p-5">
-            <div className="flex items-center gap-2"><IconCard className="size-5 text-brand" /><h2 className="text-lg font-bold">Your plan</h2></div>
+            <div className="flex items-center gap-2"><IconCard className="size-5 text-brand" /><h2 className="text-[17px] font-semibold">Your plan</h2></div>
             <div id="dashPlan" className="mt-2 text-[15px]" aria-live="polite">
               {!status ? <div className="skeleton h-12 rounded-lg" /> :
                 "error" in status ? <p className="text-muted">See Plan &amp; billing for your trial and subscription.</p> :
@@ -143,13 +144,14 @@ export function Dashboard() {
                 { href: "/customers", label: "Customers", icon: IconUsers },
               ].map((it) => (
                 <li key={it.href}>
-                  <Link href={it.href} className="flex min-h-12 items-center gap-3 rounded-xl px-3 font-semibold hover:bg-slate-50">
+                  <Link href={it.href} className="tap flex min-h-12 items-center gap-3 rounded-xl px-3 font-medium hover:bg-slate-50">
                     <it.icon className="size-5 text-brand" /><span className="flex-1">{it.label}</span><IconArrowRight className="size-4 text-slate-400" />
                   </Link>
                 </li>
               ))}
             </ul>
           </Card>
+          <InstallCard />
         </div>
       </div>
     </div>

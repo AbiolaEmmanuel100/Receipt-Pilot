@@ -65,7 +65,7 @@ export function BillingPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-5">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight md:text-3xl">Subscription</h1>
+        <h1 className="text-[1.625rem] font-bold tracking-tight md:text-[1.875rem]">Subscription</h1>
         <p className="text-sm text-muted">Every account starts with a 14-day free trial. After that, choose a plan and pay on Paystack.</p>
       </div>
 
@@ -82,7 +82,7 @@ export function BillingPage() {
 
       <form id="billingForm" onSubmit={submit} className="space-y-5">
         <fieldset>
-          <legend className="mb-2 text-lg font-bold">Plan</legend>
+          <legend className="mb-2 text-[17px] font-semibold">Plan</legend>
           <div className="grid gap-3 sm:grid-cols-2">
             {plans.map((p) => {
               const on = plan === p.code;
@@ -97,7 +97,7 @@ export function BillingPage() {
                     <span className={cx("flex size-6 items-center justify-center rounded-full border-2", on ? "border-brand bg-brand text-white" : "border-slate-300")} aria-hidden="true">{on ? <IconCheck className="size-4" /> : null}</span>
                   </span>
                   <span className="mt-2">
-                    <span className="tabular text-2xl font-extrabold">{B.money(p.naira)}</span>
+                    <span className="tabular text-2xl font-bold">{B.money(p.naira)}</span>
                     {months ? <span className="text-sm text-muted"> / {months === 1 ? "month" : months + " months"}</span> : null}
                     {perMonth ? <span className="tabular block text-sm text-muted">{B.money(perMonth)} per month</span> : null}
                   </span>

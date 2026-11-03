@@ -109,7 +109,7 @@ export function Customers() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-[1.75rem] font-extrabold tracking-tight md:text-3xl">Customers</h1>
+        <h1 className="text-[1.625rem] font-bold tracking-tight md:text-[1.875rem]">Customers</h1>
         <p className="mt-1 max-w-2xl text-[15px] text-muted">Customers from your receipts. Outstanding amounts are from unpaid and partially paid receipts only.</p>
       </div>
       <div className="relative">
@@ -133,12 +133,12 @@ export function Customers() {
                 <Card className="p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-lg font-bold">{c.name}</p>
+                      <p className="truncate text-[17px] font-semibold">{c.name}</p>
                       <p className="text-sm text-muted">{c.count} {c.count === 1 ? "receipt" : "receipts"} · Last {c.lastDate || "—"}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs font-semibold uppercase tracking-wide text-muted">Outstanding</p>
-                      <p className={"tabular font-extrabold " + (c.outstanding > 0 ? "text-[#92400e]" : "text-ink")}>{money(c.outstanding, c.currency)}</p>
+                      <p className={"tabular font-bold " + (c.outstanding > 0 ? "text-[#92400e]" : "text-ink")}>{money(c.outstanding, c.currency)}</p>
                     </div>
                   </div>
                   <dl className="tabular mt-3 grid grid-cols-2 gap-2 text-sm">
@@ -164,8 +164,8 @@ export function Customers() {
                 {visible.map((c) => (
                   <tr key={c.key} className="hover:bg-slate-50/60">
                     <td className="px-3 py-2.5 font-semibold">{c.name}</td>
-                    <td className="whitespace-nowrap px-3 py-2.5">{c.phone ? <a className="text-brand underline-offset-2 hover:underline" href={"tel:" + c.phone}>{c.phone}</a> : "—"}</td>
-                    <td className="px-3 py-2.5">{c.email ? <a className="text-brand underline-offset-2 hover:underline" href={"mailto:" + c.email}>{c.email}</a> : "—"}</td>
+                    <td className="whitespace-nowrap px-3 py-0">{c.phone ? <a className="inline-flex min-h-11 items-center text-brand underline-offset-2 hover:underline" href={"tel:" + c.phone}>{c.phone}</a> : "—"}</td>
+                    <td className="px-3 py-0">{c.email ? <a className="inline-flex min-h-11 items-center text-brand underline-offset-2 hover:underline" href={"mailto:" + c.email}>{c.email}</a> : "—"}</td>
                     <td className="px-3 py-2.5">{c.count}</td>
                     <td className="whitespace-nowrap px-3 py-2.5">{money(c.purchases, c.currency)}</td>
                     <td className="whitespace-nowrap px-3 py-2.5">{money(c.outstanding, c.currency)}</td>

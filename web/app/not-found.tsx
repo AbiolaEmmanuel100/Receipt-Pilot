@@ -9,8 +9,8 @@ export default function NotFound() {
     <>
       <SiteHeader />
       <main id="main" className="mx-auto flex max-w-xl flex-col items-center px-4 py-20 text-center">
-        <p className="text-6xl font-extrabold tracking-tight text-brand">404</p>
-        <h1 className="mt-3 text-2xl font-extrabold">Page not found</h1>
+        <p className="text-6xl font-bold tracking-tight text-brand">404</p>
+        <h1 className="mt-3 text-[1.625rem] font-bold tracking-tight">Page not found</h1>
         <p className="mt-2 text-muted">That address is not a page on Receipt Pilot.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <Link prefetch={false} href="/new" className={buttonClass("primary")}>Receipt Generator</Link>

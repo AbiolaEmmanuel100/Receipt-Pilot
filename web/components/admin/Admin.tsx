@@ -68,7 +68,7 @@ export function Admin() {
   return (
     <div className="mx-auto max-w-5xl space-y-4">
       <div>
-        <h1 className="text-[1.75rem] font-extrabold tracking-tight md:text-3xl">Account Deletion Requests</h1>
+        <h1 className="text-[1.625rem] font-bold tracking-tight md:text-[1.875rem]">Account Deletion Requests</h1>
         <p className="mt-1 text-[15px] text-muted">Pending requests only. Access is restricted to authorized Receipt Pilot owners.</p>
       </div>
       {v.status ? (

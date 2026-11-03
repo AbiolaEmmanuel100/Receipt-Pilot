@@ -21,7 +21,7 @@ export default function About() {
       <p>You can use it without an account. Create an account if you want receipts backed up and available on other devices.</p>
       <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2">
         <Link prefetch={false} href="/new" className={buttonClass("primary", "md", "!text-white")}>Open the online receipt generator</Link>
-        <Link prefetch={false} href="/privacy-policy">Privacy Policy</Link><span aria-hidden="true">·</span><Link prefetch={false} href="/terms">Terms</Link>
+        <Link prefetch={false} href="/privacy-policy" className="inline-flex min-h-11 items-center">Privacy Policy</Link><span aria-hidden="true">·</span><Link prefetch={false} href="/terms" className="inline-flex min-h-11 items-center">Terms</Link>
       </div>
     </Prose>
   );

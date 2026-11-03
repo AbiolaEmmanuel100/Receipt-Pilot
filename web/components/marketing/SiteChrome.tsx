@@ -26,7 +26,7 @@ export function SiteFooter() {
     <footer className="bg-navy text-slate-300">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-          <p className="text-lg font-extrabold text-white">Receipt <span className="text-teal-300">Pilot</span></p>
+          <p className="text-lg font-bold text-white">Receipt <span className="text-teal-300">Pilot</span></p>
           <p className="mt-2 max-w-sm text-[15px]">Online receipt maker for small businesses. Create, save and print digital receipts.</p>
           <p className="mt-4 text-sm text-slate-400">&copy; 2026 Receipt Pilot</p>
         </div>

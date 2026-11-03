@@ -75,7 +75,7 @@ export function ResetPassword() {
 
   return (
     <Card className="p-5 sm:p-7">
-      <h1 className="text-2xl font-extrabold tracking-tight">Choose a new password</h1>
+      <h1 className="text-[1.625rem] font-bold tracking-tight">Choose a new password</h1>
       <p id="resetStatus" role="status" className="mt-1 text-[15px] text-muted">{status}</p>
       {showForm ? (
         <form onSubmit={submit} className="mt-5 space-y-4">
