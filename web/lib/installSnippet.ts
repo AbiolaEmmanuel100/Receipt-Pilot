@@ -1,0 +1,2 @@
+// Inline in <head> (server-rendered): keeps the beforeinstallprompt event for the "Install app" button.
+export const INSTALL_SNIPPET = "window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__rpBip=e;window.dispatchEvent(new Event('rp-bip'))});window.addEventListener('appinstalled',function(){window.__rpBip=null;window.__rpInstalled=1;window.dispatchEvent(new Event('rp-bip'))});";

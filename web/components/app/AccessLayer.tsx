@@ -203,8 +203,8 @@ export function SyncChip() {
   if (!c) return null;
   const offline = /offline/i.test(c.text);
   return (
-    <div role="status" aria-live="polite" className="fixed left-1/2 top-[calc(env(safe-area-inset-top)+8px)] z-[60] flex -translate-x-1/2 items-center gap-2 rounded-full bg-navy px-3.5 py-1.5 text-sm font-semibold text-white shadow-lift">
-      {offline ? <IconOffline className="size-4" /> : <IconCloud className="size-4" />}{c.text}
+    <div role="status" aria-live="polite" className="pointer-events-none fixed left-1/2 top-[calc(env(safe-area-inset-top)+64px)] lg:top-3 z-[60] flex max-w-[calc(100vw-32px)] -translate-x-1/2 items-center gap-1.5 rounded-full border border-line bg-white/95 px-3 py-1 text-[13px] font-medium text-ink shadow-lift backdrop-blur">
+      {offline ? <IconOffline className="size-3.5 text-[#92400e]" /> : <IconCloud className="size-3.5 text-brand" />}<span className="truncate">{c.text}</span>
     </div>
   );
 }
