@@ -2,17 +2,18 @@
 
 /* ---------- Design tokens ---------- */
 @theme {
+  /* One brand hue (teal), slate neutrals, three status colours. */
   --color-brand: #0f766e;
-  --color-brand-dark: #0b5a54;
+  --color-brand-dark: #0d5f59;
   --color-brand-deep: #134e4a;
   --color-brand-light: #ccfbf1;
   --color-brand-50: #f0fdfa;
   --color-navy: #0f172a;
   --color-navy-2: #1e293b;
   --color-ink: #0f172a;
-  --color-muted: #55657a;
-  --color-line: #e2e8f0;
-  --color-bg: #f8fafc;
+  --color-muted: #52627a;
+  --color-line: #e3e8ef;
+  --color-bg: #f5f7fa;
   --color-card: #ffffff;
   --color-ok: #047857;
   --color-ok-bg: #d1fae5;
@@ -20,10 +21,10 @@
   --color-warn-bg: #fef3c7;
   --color-danger: #b91c1c;
   --color-danger-bg: #fee2e2;
-  --font-sans: var(--font-source-sans), "Segoe UI", system-ui, sans-serif;
-  --radius-card: 16px;
-  --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
-  --shadow-lift: 0 2px 4px rgba(15, 23, 42, 0.06), 0 16px 40px rgba(15, 23, 42, 0.12);
+  --font-sans: var(--font-inter), "Segoe UI", system-ui, -apple-system, sans-serif;
+  --radius-card: 14px;
+  --shadow-soft: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.04);
+  --shadow-lift: 0 4px 8px -2px rgba(16, 24, 40, 0.08), 0 16px 32px -8px rgba(16, 24, 40, 0.16);
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -32,8 +33,12 @@
   body {
     @apply bg-bg text-ink antialiased;
     font-family: var(--font-sans);
-    line-height: 1.55;
+    line-height: 1.5;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-tap-highlight-color: transparent;
   }
+  h1, h2, h3 { letter-spacing: -0.02em; }
+  ::selection { background: color-mix(in srgb, var(--color-brand) 18%, transparent); }
   :focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
   input, select, textarea, button { font: inherit; }
   /* 16px inputs stop iOS zoom */
@@ -49,6 +54,12 @@
 .tabular { font-variant-numeric: tabular-nums; }
 .press { transition: transform 120ms var(--ease-out-soft), box-shadow 160ms var(--ease-out-soft), background-color 160ms, color 160ms, border-color 160ms; }
 .press:active:not(:disabled) { transform: scale(0.97); }
+/* Tap feedback for list rows and cards that act as links */
+.tap { transition: background-color 140ms, transform 140ms var(--ease-out-soft); }
+.tap:active { transform: scale(0.99); background-color: rgb(241 245 249); }
+.safe-top { padding-top: env(safe-area-inset-top); }
+.tab { transition: color 160ms; }
+.tab:active > span { transform: scale(0.92); transition: transform 120ms var(--ease-out-soft); }
 @media (prefers-reduced-motion: reduce) {
   .press, .press:active { transition: none; transform: none !important; }
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }

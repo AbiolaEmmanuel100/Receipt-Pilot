@@ -6,10 +6,10 @@ import { cx } from "./cx";
 export type Variant = "primary" | "secondary" | "ghost" | "danger" | "navy" | "link";
 export type Size = "sm" | "md" | "lg";
 
-const base = "press inline-flex items-center justify-center gap-2 rounded-xl font-semibold select-none disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
+const base = "press inline-flex items-center justify-center gap-2 rounded-[11px] font-semibold tracking-[-0.01em] select-none text-center disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand";
 const variants: Record<Variant, string> = {
-  primary: "bg-brand text-white shadow-sm hover:bg-brand-dark",
-  secondary: "bg-white text-ink border border-line hover:border-brand hover:text-brand",
+  primary: "bg-brand text-white shadow-[0_1px_2px_rgba(16,24,40,0.12),inset_0_1px_0_rgba(255,255,255,0.12)] hover:bg-brand-dark",
+  secondary: "bg-white text-ink border border-line shadow-[0_1px_2px_rgba(16,24,40,0.05)] hover:bg-slate-50 hover:border-slate-300",
   ghost: "bg-transparent text-ink hover:bg-slate-100",
   danger: "bg-danger text-white hover:bg-red-800",
   navy: "bg-navy text-white hover:bg-navy-2",

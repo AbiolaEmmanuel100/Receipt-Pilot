@@ -9,7 +9,7 @@ export function LogoMark({ className = "size-8" }: { className?: string }) {
 
 export function Wordmark({ className }: { className?: string }) {
   return (
-    <span className={"inline-flex items-center gap-2 font-extrabold tracking-tight text-navy " + (className || "")}>
+    <span className={"inline-flex min-h-11 items-center gap-2 font-bold tracking-tight text-navy " + (className || "")}>
       <LogoMark />
       <span className="text-[19px]">Receipt <span className="text-brand">Pilot</span></span>
     </span>

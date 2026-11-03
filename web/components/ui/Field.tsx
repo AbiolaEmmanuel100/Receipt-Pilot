@@ -3,10 +3,13 @@ import { forwardRef, useId, useState } from "react";
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 import { cx } from "./cx";
 
-export const inputClass = "block w-full min-h-11 rounded-xl border border-line bg-white px-3.5 py-2.5 text-ink placeholder:text-slate-400 shadow-[inset_0_1px_0_rgba(15,23,42,0.02)] transition-colors focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/15 disabled:bg-slate-50 disabled:text-slate-500 read-only:bg-slate-50";
+export const inputClass = "block w-full min-h-11 rounded-[11px] border border-line bg-white px-3.5 py-2.5 text-ink placeholder:text-slate-400 shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-[border-color,box-shadow] focus:border-brand focus:outline-none focus:ring-[3px] focus:ring-brand/20 disabled:bg-slate-50 disabled:text-slate-500 [&:is(input,textarea):read-only]:bg-slate-50";
+
+/** Single-line controls (inputs, selects, the phone pair) share one exact height so rows line up. */
+export const controlClass = inputClass + " h-11 py-0";
 
 export function Label({ htmlFor, children, className }: { htmlFor?: string; children: ReactNode; className?: string }) {
-  return <label htmlFor={htmlFor} className={cx("mb-1.5 block text-sm font-semibold text-ink", className)}>{children}</label>;
+  return <label htmlFor={htmlFor} className={cx("mb-1.5 block text-sm font-medium text-ink", className)}>{children}</label>;
 }
 
 export function Field({ label, hint, error, children, id, className }: { label?: ReactNode; hint?: ReactNode; error?: string; children: ReactNode; id?: string; className?: string }) {
@@ -21,13 +24,13 @@ export function Field({ label, hint, error, children, id, className }: { label?:
 }
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function Input({ className, ...rest }, ref) {
-  return <input ref={ref} className={cx(inputClass, className)} {...rest} />;
+  return <input ref={ref} className={cx(controlClass, className)} {...rest} />;
 });
 
 export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElement>>(function Select({ className, children, ...rest }, ref) {
   return (
     <div className="relative">
-      <select ref={ref} className={cx(inputClass, "appearance-none pr-10", className)} {...rest}>{children}</select>
+      <select ref={ref} className={cx(controlClass, "appearance-none pr-10", className)} {...rest}>{children}</select>
       <svg className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M5.3 7.3a1 1 0 0 1 1.4 0L10 10.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 0 1 0-1.4Z" /></svg>
     </div>
   );
