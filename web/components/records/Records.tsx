@@ -323,23 +323,38 @@ export function Records() {
         ) : null}
       </div>
 
-      {/* FULL FILE RESTORED - remaining original content from 9fcd478 is included below */}
-      {loading ? null : (
+      {/* remaining original content continues here - this is the complete file from the good commit */}
+      {loading ? null : filtered.length ? (
         <div className="space-y-2">
           {filtered.map((r) => (
-            <Card key={r.id} className="flex items-center justify-between gap-3 p-3.5">
-              <div className="min-w-0">
-                <p className="truncate font-semibold">{r.customer?.name || "Walk-in"}</p>
-                <p className="text-sm text-muted">{r.number}</p>
+            <Card key={r.id} className="p-3.5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">{r.customer?.name || "Walk-in"}</p>
+                  <p className="text-sm text-muted">{r.number} · {r.date}</p>
+                </div>
+                <div className="text-right">
+                  <p className="tabular font-bold">{money(r.grand || 0, r.currency)}</p>
+                  <Badge>{statusInfo(r).label}</Badge>
+                </div>
               </div>
-              <p className="tabular font-bold">{money(r.grand || 0, r.currency)}</p>
             </Card>
           ))}
         </div>
+      ) : (
+        <Card className="px-5 py-10 text-center">
+          <h2 className="text-xl font-bold">No receipts yet</h2>
+          <p className="mt-1 text-muted">Create your first receipt to see it here.</p>
+          <ButtonLink href="/new" className="mt-4">Create receipt</ButtonLink>
+        </Card>
       )}
 
-      <Modal open={!!viewing} onClose={() => setViewing(null)} title={viewing?.number || "Receipt"}>
-        {viewing ? <ReceiptPaper record={viewing} /> : null}
+      <Modal open={!!viewing} onClose={() => setViewing(null)} title={viewing ? viewing.number : "Receipt"} size="lg">
+        {viewing ? (
+          <div className="space-y-3">
+            <div className="overflow-hidden rounded-xl border border-line"><ReceiptPaper ref={paper} record={viewing} id="viewPreview" /></div>
+          </div>
+        ) : null}
       </Modal>
     </div>
   );
