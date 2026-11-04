@@ -59,7 +59,6 @@ export function SignIn() {
           <div key={panel}><AuthPanels panel={panel} inline /></div>
         )}
       </Card>
-      <p className="mt-4 text-center text-sm text-muted">Receipts made without an account stay on this device. When you sign in, you can choose to sync them to your account.</p>
     </div>
   );
 }

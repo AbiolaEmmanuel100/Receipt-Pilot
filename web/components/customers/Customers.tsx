@@ -110,7 +110,6 @@ export function Customers() {
     <div className="space-y-5">
       <div>
         <h1 className="text-[1.625rem] font-bold tracking-tight md:text-[1.875rem]">Customers</h1>
-        <p className="mt-1 max-w-2xl text-[15px] text-muted">Customers from your receipts. Outstanding amounts are from unpaid and partially paid receipts only.</p>
       </div>
       <div className="relative">
         <label className="sr-only" htmlFor="custSearch">Search customers</label>
