@@ -400,7 +400,7 @@ export function Records() {
               );
             })}
           </ul>
-          <Card className="hidden overflow-x-auto md:block">
+          <Card className="relative hidden overflow-x-auto md:block">
             <table className="w-full text-left text-[15px]">
               <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
                 <tr><th className="px-4 py-3">Receipt No.</th><th className="px-4 py-3">Date</th><th className="px-4 py-3">Customer</th><th className="px-4 py-3 text-right">Total</th><th className="px-4 py-3 text-right">Balance</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Owner</th><th className="px-4 py-3">Created</th><th className="px-4 py-3"><span className="sr-only">Actions</span></th></tr>
@@ -420,7 +420,7 @@ export function Records() {
                       <td className="tabular px-4 py-2.5 text-muted">{String(r.createdAt || "").slice(0, 10)}</td>
                       <td className="px-4 py-2.5">
                         <div className="flex justify-end gap-1">
-                          {canRecordPayment(r) ? <Button size="sm" variant="ghost" onClick={() => act("pay", r)} aria-label={"Record payment for " + r.number}>Record payment</Button> : null}
+                          {canRecordPayment(r) ? <span className="hidden lg:contents"><Button size="sm" variant="ghost" onClick={() => act("pay", r)} aria-label={"Record payment for " + r.number}>Record payment</Button></span> : null}
                           <Button size="sm" variant="secondary" onClick={() => act("view", r)}>View</Button>
                           <Button size="sm" variant="ghost" onClick={() => setMenuFor(r)} aria-label={"More actions for " + r.number}><IconMore className="size-5" /></Button>
                         </div>
