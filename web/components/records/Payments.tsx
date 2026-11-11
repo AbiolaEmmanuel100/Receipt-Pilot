@@ -46,7 +46,7 @@ export function PaymentPanel({ r, onRecord, onUndo }: { r: Receipt; onRecord: ()
             ) : null}
             {pays.map((p) => (
               <li key={p.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
-                <span className="min-w-0"><span className="tabular block font-semibold">{p.date}</span><span className="block truncate text-muted">{p.method || "Payment"}{p.note ? " · " + p.note : ""}</span></span>
+                <span className="min-w-0"><span className="tabular block font-semibold">{p.date}</span><span className="block break-words text-muted">{p.method || "Payment"}{p.note ? " · " + p.note : ""}</span></span>
                 <span className="tabular shrink-0 font-semibold">{money(p.amount, cur)}</span>
               </li>
             ))}

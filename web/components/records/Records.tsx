@@ -420,7 +420,6 @@ export function Records() {
                       <td className="tabular px-4 py-2.5 text-muted">{String(r.createdAt || "").slice(0, 10)}</td>
                       <td className="px-4 py-2.5">
                         <div className="flex justify-end gap-1">
-                          {canRecordPayment(r) ? <span className="hidden lg:contents"><Button size="sm" variant="ghost" onClick={() => act("pay", r)} aria-label={"Record payment for " + r.number}>Record payment</Button></span> : null}
                           <Button size="sm" variant="secondary" onClick={() => act("view", r)}>View</Button>
                           <Button size="sm" variant="ghost" onClick={() => setMenuFor(r)} aria-label={"More actions for " + r.number}><IconMore className="size-5" /></Button>
                         </div>
