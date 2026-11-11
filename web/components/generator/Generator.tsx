@@ -26,7 +26,7 @@ import { cx } from "@/components/ui/cx";
 import { IconChevronDown, IconDownload, IconEdit, IconEye, IconImage, IconMinus, IconPlus, IconPrint, IconShare, IconTrash, IconCheck, IconList } from "@/components/ui/Icons";
 import { ReceiptPaper } from "@/components/receipt/ReceiptPaper";
 import { openShare } from "@/components/app/ShareSheet";
-import { amountsLocked, applyEditLock, editLockError, paymentLocked } from "@/lib/payments";
+import { amountsLocked, applyEditLock, editLockError, isOwing, paymentLocked } from "@/lib/payments";
 import { FormState, ItemField, emptyForm, effectivePaid, isDirty, lockedPaid, newItem, readForm, statusMessage, withBusiness, withRecord } from "./form";
 
 const FORM_DRAFT = "receiptly_open_form_v1";
@@ -81,7 +81,7 @@ export function Generator() {
   const [editingId, setEditingId] = useState<string | null>(null);
   // Payment fields of the receipt being edited are locked once it owes money or
   // has recorded payments; they change only via Record payment in Receipt history.
-  const [editLock, setEditLock] = useState<{ pay: boolean; amounts: boolean }>({ pay: false, amounts: false });
+  const [editLock, setEditLock] = useState<{ pay: boolean; amounts: boolean; owing?: boolean }>({ pay: false, amounts: false });
   const editRef = useRef<string | null>(null);
   editRef.current = editingId;
   const lastSaved = useRef<string | null>(null);
@@ -236,7 +236,7 @@ export function Generator() {
         const rec = await S.getReceipt(editId);
         if (rec) {
           setEditingId(rec.id);
-          setEditLock({ pay: paymentLocked(rec), amounts: amountsLocked(rec) });
+          setEditLock({ pay: paymentLocked(rec), amounts: amountsLocked(rec), owing: isOwing(rec) });
           setF(withRecord(withBusiness(emptyForm(), biz, suggest), rec, suggest));
           setBizOpen(false);
           setBooted(true);
@@ -698,8 +698,10 @@ export function Generator() {
             {editLock.pay && editingId ? (
               <div className="rounded-2xl border border-warn/30 bg-warn-bg/60 px-4 py-3 text-sm text-[#7c2d12]" id="payLockNote" role="note">
                 <p className="font-semibold">Payments are recorded separately</p>
-                <p className="mt-0.5">To add money received, open this receipt in Receipt history and tap <strong>Record payment</strong>. That keeps a clear payment history and updates the balance for you.</p>
-                <Link href={"/records?view=" + encodeURIComponent(editingId)} className="mt-1 inline-flex min-h-11 items-center font-semibold text-brand underline-offset-2 hover:underline">Go to Record payment</Link>
+                {editLock.owing
+                  ? <p className="mt-0.5">To add money received, open this receipt in Receipt history and tap <strong>Record payment</strong>. That keeps a clear payment history and updates the balance for you.</p>
+                  : <p className="mt-0.5">This receipt was paid through its payment history. To fix a wrong payment, open it in Receipt history and use <strong>Undo last payment</strong>.</p>}
+                <Link href={"/records?view=" + encodeURIComponent(editingId)} className="mt-1 inline-flex min-h-11 items-center font-semibold text-brand underline-offset-2 hover:underline">{editLock.owing ? "Go to Record payment" : "Open payment history"}</Link>
               </div>
             ) : null}
 

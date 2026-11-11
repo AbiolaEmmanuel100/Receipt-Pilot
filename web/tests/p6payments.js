@@ -65,6 +65,8 @@ const bodyText = (page) => page.evaluate(() => document.body.innerText);
     // Record payment sheet
     await page.click('#recordPaymentBtn'); await sleep(700);
     await page.screenshot({ path: out + '/2-record-payment-sheet-' + w + '.png' });
+    const small = await page.evaluate(() => Array.from(document.querySelectorAll('#recordPaymentForm button:not([hidden]), #recordPaymentForm input, #recordPaymentForm select, #savePaymentBtn')).filter((e) => e.offsetParent !== null).map((e) => [e.id || e.textContent.trim(), Math.round(e.getBoundingClientRect().height)]).filter((x) => x[1] < 44));
+    check('Record payment sheet: every control is at least 44px tall' + tag, small.length === 0, small);
     const before = await idbGet(page, 'seed-5');
     await setVal(page, '#payAmount', '20000'); await sleep(200);
     await page.click('#savePaymentBtn'); await sleep(500);
@@ -82,6 +84,8 @@ const bodyText = (page) => page.evaluate(() => document.body.innerText);
     check('Preview panel updated to ₦7,000 + history list' + tag, (await page.$eval('#payPanelBalance', (e) => e.textContent)) === fmt(7000) && (await page.$$('#paymentList li')).length === 2);
     check('Receipt paper shows Payment history, Total paid, Balance remaining' + tag, await page.evaluate(() => { const t = document.querySelector('#viewPreview .r-payments'); return !!t && /Payment history/i.test(t.textContent) && t.textContent.includes('Second instalment') && t.textContent.includes('Balance remaining') && t.textContent.includes('₦7,000.00'); }));
     await page.screenshot({ path: out + '/3-after-partial-payment-' + w + '.png' });
+    const smallP = await page.evaluate(() => Array.from(document.querySelectorAll('#paymentPanel button')).map((e) => [e.textContent.trim(), Math.round(e.getBoundingClientRect().height)]).filter((x) => x[1] < 44));
+    check('Payment panel buttons are at least 44px tall' + tag, smallP.length === 0, smallP);
 
     // Second payment, then undo it with confirmation
     await page.click('#recordPaymentBtn'); await sleep(600);

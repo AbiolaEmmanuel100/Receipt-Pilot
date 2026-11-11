@@ -69,7 +69,7 @@ export function Checkbox({ checked, onChange, children, id }: { checked: boolean
 /** Toggle-chip group (payment method/status, filters). Uses radio semantics. */
 export function ChipGroup<T extends string>({ label, value, options, onChange, name, disabled }: { label: string; value: T; options: { value: T; label: string }[]; onChange: (v: T) => void; name: string; disabled?: boolean }) {
   return (
-    <fieldset className="min-w-0" disabled={disabled}>
+    <fieldset className={cx("min-w-0", disabled && "opacity-60 [&_label]:cursor-not-allowed")} disabled={disabled}>
       <legend className="mb-1.5 text-sm font-semibold text-ink">{label}</legend>
       <div className="flex flex-wrap gap-2">
         {options.map((o) => {
