@@ -403,7 +403,7 @@ export function Records() {
           <Card className="relative hidden overflow-x-auto md:block">
             <table className="w-full text-left text-[15px]">
               <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
-                <tr><th className="px-4 py-3">Receipt No.</th><th className="px-4 py-3">Date</th><th className="px-4 py-3">Customer</th><th className="px-4 py-3 text-right">Total</th><th className="px-4 py-3 text-right">Balance</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Owner</th><th className="px-4 py-3">Created</th><th className="px-4 py-3"><span className="sr-only">Actions</span></th></tr>
+                <tr><th className="px-4 py-3">Receipt No.</th><th className="px-4 py-3">Date</th><th className="px-4 py-3">Customer</th><th className="px-4 py-3 text-right">Total</th><th className="px-4 py-3 text-right">Balance</th><th className="px-4 py-3">Status</th><th className="hidden px-4 py-3 2xl:table-cell">Owner</th><th className="px-4 py-3">Created</th><th className="px-4 py-3"><span className="sr-only">Actions</span></th></tr>
               </thead>
               <tbody className="divide-y divide-line">
                 {filtered.map((r) => {
@@ -416,7 +416,7 @@ export function Records() {
                       <td className="tabular px-4 py-2.5 text-right font-bold">{money(r.grand, r.currency || "NGN")}</td>
                       <td className={cx("tabular px-4 py-2.5 text-right", isOwing(r) ? "font-semibold text-warn" : "text-muted")}>{isOwing(r) ? money(r.balance, r.currency || "NGN") : "—"}</td>
                       <td className="px-4 py-2.5"><Badge tone={s.tone}>{s.label}</Badge></td>
-                      <td className="max-w-40 truncate px-4 py-2.5 text-muted">{(r.business && r.business.name) || "—"}</td>
+                      <td className="hidden max-w-40 truncate px-4 py-2.5 text-muted 2xl:table-cell">{(r.business && r.business.name) || "—"}</td>
                       <td className="tabular px-4 py-2.5 text-muted">{String(r.createdAt || "").slice(0, 10)}</td>
                       <td className="px-4 py-2.5">
                         <div className="flex justify-end gap-1">
