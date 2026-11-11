@@ -19,13 +19,17 @@ import { Badge, Card } from "@/components/ui/Card";
 import { Field, Input, Select } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
 import { cx } from "@/components/ui/cx";
-import { IconChevronDown, IconCopy, IconDownload, IconEdit, IconFile, IconImage, IconMore, IconPlus, IconPrint, IconSearch, IconShare, IconTrash } from "@/components/ui/Icons";
+import { IconChevronDown, IconCopy, IconDownload, IconEdit, IconFile, IconImage, IconMore, IconPlus, IconPrint, IconSearch, IconShare, IconTrash, IconCash } from "@/components/ui/Icons";
 import { ReceiptPaper } from "@/components/receipt/ReceiptPaper";
 import { openShare } from "@/components/app/ShareSheet";
+import { OwingTag, PaymentPanel, RecordPaymentSheet } from "./Payments";
+import { canRecordPayment, isOwing, paymentsOf, recordPayment, undoLastPayment } from "@/lib/payments";
+import type { PaymentInput } from "@/lib/payments";
 import { DEFAULT_FILTERS, Filters, applyFilters, isFiltered, moneyMix, statusInfo, totals } from "./filters";
 
 const STATUS_CHIPS = [
   { value: "all", label: "All" },
+  { value: "owing", label: "Owing" },
   { value: "PAID IN FULL", label: "Paid" },
   { value: "PARTIALLY PAID", label: "Part-paid" },
   { value: "UNPAID", label: "Unpaid" },
@@ -56,6 +60,7 @@ export function Records() {
   const [actsN, setActsN] = useState(5);
   const [viewing, setViewing] = useState<Receipt | null>(null);
   const [menuFor, setMenuFor] = useState<Receipt | null>(null);
+  const [paying, setPaying] = useState<Receipt | null>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [signedIn, setSignedIn] = useState(false);
   const paper = useRef<HTMLDivElement | null>(null);
@@ -120,6 +125,8 @@ export function Records() {
     if (kind === "edit") { track("receipt_edited", { page: "records" }); location.href = "/new?edit=" + encodeURIComponent(r.id); return; }
     if (kind === "dup") { track("receipt_duplicated", { page: "records" }); location.href = "/new?duplicate=" + encodeURIComponent(r.id); return; }
     if (kind === "send") { openShare(r); return; }
+    if (kind === "pay") { if (canRecordPayment(r)) setPaying(r); return; }
+    if (kind === "undoPay") { await undoPayment(r); return; }
     if (kind === "image") {
       downloadImage(r).then(() => toast("Receipt downloaded")).catch(() => toast("Could not create the image.", "error"));
       return;
@@ -172,6 +179,42 @@ export function Records() {
       await loadTrash();
       toast("Receipt permanently deleted.");
     }
+  }
+
+  // Record payment / Undo last payment: the receipt object (incl. its payment
+  // history) is saved locally and pushed with the normal sync, same as an edit.
+  async function persistPayment(rec: Receipt) {
+    if (userId()) rec.userId = userId();
+    await S.saveReceipt(rec);
+    setAll((prev) => prev.map((x) => (x.id === rec.id ? rec : x)));
+    setViewing((v) => (v && v.id === rec.id ? rec : v));
+    Promise.resolve(Sync.pushOne(rec)).catch(() => {});
+  }
+  async function savePayment(input: PaymentInput) {
+    if (!paying) return;
+    const fresh = (await S.getReceipt(paying.id)) || paying;
+    const rec = recordPayment(fresh, input);
+    await persistPayment(rec);
+    setPaying(null);
+    const cur = rec.currency || "NGN";
+    toast(rec.status === "PAID IN FULL" ? "Payment saved. Receipt " + rec.number + " is now paid in full." : "Payment saved. Balance left: " + money(rec.balance, cur) + ".");
+    Act.log("payment_recorded", { number: rec.number });
+    track("payment_recorded", { page: "records", cleared: rec.status === "PAID IN FULL" });
+  }
+  async function undoPayment(r: Receipt) {
+    const fresh = (await S.getReceipt(r.id)) || r;
+    const list = paymentsOf(fresh);
+    if (!list.length) return;
+    const last = list[list.length - 1];
+    const cur = fresh.currency || "NGN";
+    const ok = await confirm({ title: "Undo last payment?", message: "Remove the " + money(last.amount, cur) + " payment recorded for " + last.date + "? The balance goes back up by the same amount. The change is noted in this receipt's history.", confirmLabel: "Undo payment", danger: true });
+    if (!ok) return;
+    try {
+      const rec = undoLastPayment(fresh);
+      await persistPayment(rec);
+      toast("Payment removed. Balance due: " + money(rec.balance, cur) + ".");
+      Act.log("payment_undone", { number: rec.number });
+    } catch (e) { toast((e as Error).message || "Could not undo that payment.", "error"); }
   }
 
   async function onRestoreFile(file: File | undefined) {
@@ -349,7 +392,7 @@ export function Records() {
                     </div>
                     <div className="shrink-0 text-right">
                       <p className="tabular font-bold">{money(r.grand, r.currency || "NGN")}</p>
-                      <Badge tone={s.tone}>{s.label}</Badge>
+                      {isOwing(r) && r.status !== "UNPAID" ? <OwingTag r={r} /> : <Badge tone={s.tone}>{s.label}</Badge>}
                     </div>
                   </button>
                   <button type="button" onClick={() => setMenuFor(r)} aria-label={"More actions for " + r.number} className="flex w-11 shrink-0 items-center justify-center border-l border-line text-muted"><IconMore className="size-5" /></button>
@@ -360,7 +403,7 @@ export function Records() {
           <Card className="hidden overflow-x-auto md:block">
             <table className="w-full text-left text-[15px]">
               <thead className="border-b border-line text-xs uppercase tracking-wide text-muted">
-                <tr><th className="px-4 py-3">Receipt No.</th><th className="px-4 py-3">Date</th><th className="px-4 py-3">Customer</th><th className="px-4 py-3 text-right">Total</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Owner</th><th className="px-4 py-3">Created</th><th className="px-4 py-3"><span className="sr-only">Actions</span></th></tr>
+                <tr><th className="px-4 py-3">Receipt No.</th><th className="px-4 py-3">Date</th><th className="px-4 py-3">Customer</th><th className="px-4 py-3 text-right">Total</th><th className="px-4 py-3 text-right">Balance</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Owner</th><th className="px-4 py-3">Created</th><th className="px-4 py-3"><span className="sr-only">Actions</span></th></tr>
               </thead>
               <tbody className="divide-y divide-line">
                 {filtered.map((r) => {
@@ -371,11 +414,13 @@ export function Records() {
                       <td className="tabular px-4 py-2.5">{r.date}</td>
                       <td className="max-w-48 truncate px-4 py-2.5">{(r.customer && r.customer.name) || "—"}</td>
                       <td className="tabular px-4 py-2.5 text-right font-bold">{money(r.grand, r.currency || "NGN")}</td>
+                      <td className={cx("tabular px-4 py-2.5 text-right", isOwing(r) ? "font-semibold text-warn" : "text-muted")}>{isOwing(r) ? money(r.balance, r.currency || "NGN") : "—"}</td>
                       <td className="px-4 py-2.5"><Badge tone={s.tone}>{s.label}</Badge></td>
                       <td className="max-w-40 truncate px-4 py-2.5 text-muted">{(r.business && r.business.name) || "—"}</td>
                       <td className="tabular px-4 py-2.5 text-muted">{String(r.createdAt || "").slice(0, 10)}</td>
                       <td className="px-4 py-2.5">
                         <div className="flex justify-end gap-1">
+                          {canRecordPayment(r) ? <Button size="sm" variant="ghost" onClick={() => act("pay", r)} aria-label={"Record payment for " + r.number}>Record payment</Button> : null}
                           <Button size="sm" variant="secondary" onClick={() => act("view", r)}>View</Button>
                           <Button size="sm" variant="ghost" onClick={() => setMenuFor(r)} aria-label={"More actions for " + r.number}><IconMore className="size-5" /></Button>
                         </div>
@@ -451,6 +496,7 @@ export function Records() {
         {menuFor ? (
           <div className="grid gap-1">
             {[
+              ...(canRecordPayment(menuFor) ? [["pay", "Record payment", <IconCash key="i" className="size-5" />]] : []),
               ["send", "Send", <IconShare key="i" className="size-5" />],
               ["pdf", "Download PDF", <IconFile key="i" className="size-5" />],
               ["image", "Download image", <IconImage key="i" className="size-5" />],
@@ -482,6 +528,7 @@ export function Records() {
         ) : null}>
         {viewing ? (
           <div className="space-y-3">
+            {!viewing.deletedAt ? <PaymentPanel r={viewing} onRecord={() => setPaying(viewing)} onUndo={() => act("undoPay", viewing)} /> : null}
             <div className="overflow-hidden rounded-xl border border-line"><ReceiptPaper ref={paper} record={viewing} id="viewPreview" /></div>
             <div className="text-sm text-muted">
               <p className="font-semibold text-ink">History</p>
@@ -492,6 +539,7 @@ export function Records() {
           </div>
         ) : null}
       </Modal>
+      <RecordPaymentSheet r={paying} open={!!paying} onClose={() => setPaying(null)} onSave={savePayment} />
       <p className="sr-only"><Link href="/new">Create a receipt</Link></p>
     </div>
   );

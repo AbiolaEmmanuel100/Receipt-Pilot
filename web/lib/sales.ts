@@ -1,5 +1,6 @@
 import { compute, money as calcMoney } from "./calc";
 import type { Receipt } from "./types";
+import { isOwing } from "./payments";
 
 // Faithful port of js/sales.js (pure parts). Same period rules, same totals,
 // same product allocation and rounding, so the figures match the old page.
@@ -125,7 +126,8 @@ export function periodList(all: Receipt[], from: string, to: string) {
 
 export function productSource(list: Receipt[], payFilter: string) {
   let src = list.filter((r) => !r.voided && !r.refunded);
-  if (payFilter !== "all") src = src.filter((r) => normStatus(r.status) === payFilter);
+  if (payFilter === "owing") src = src.filter((r) => isOwing(r));
+  else if (payFilter !== "all") src = src.filter((r) => normStatus(r.status) === payFilter);
   return src;
 }
 

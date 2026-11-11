@@ -1,0 +1,180 @@
+[
+ {
+  "record": {
+   "id": "r1",
+   "number": "RCT-000010",
+   "date": "2026-11-01",
+   "time": "10:00",
+   "payment": "Cash",
+   "currency": "NGN",
+   "template": "classic",
+   "business": {
+    "name": "Test Biz",
+    "address": "1 Road\nIbadan",
+    "phone": "+234 800",
+    "email": "a@b.c"
+   },
+   "customer": {
+    "name": "Ada",
+    "phone": "0802"
+   },
+   "items": [
+    {
+     "name": "Rice",
+     "qty": 2,
+     "price": 25000,
+     "total": 50000
+    }
+   ],
+   "subtotal": 50000,
+   "discount": 0,
+   "taxPct": 0,
+   "tax": 0,
+   "shipping": 0,
+   "grand": 50000,
+   "paid": 20000,
+   "balance": 30000,
+   "status": "PARTIALLY PAID",
+   "notes": "hi"
+  },
+  "out": {
+   "className": "receipt style-classic hidden-logo",
+   "html": "<div class=\"r-brand\"><div class=\"r-brand-text\"><div class=\"r-biz\">Test Biz</div><div class=\"r-contact\">1 Road<br>Ibadan<br>+234 800 · a@b.c</div></div></div><div class=\"r-banner\"><span class=\"r-title\">RECEIPT</span></div><div class=\"r-info\"><div><span class=\"k\">Receipt No.</span><span class=\"v\">RCT-000010</span></div><div><span class=\"k\">Date</span><span class=\"v\">2026-11-01 · 10:00</span></div><div class=\"span-2\"><span class=\"k\">Customer</span><span class=\"v\">Ada · 0802</span></div></div><table class=\"r-table\"><thead><tr><th class=\"col-item\">Item</th><th class=\"col-num\">Qty</th><th class=\"col-num\">Price</th><th class=\"col-num\">Total</th></tr></thead><tbody><tr><td class='col-item'>Rice</td><td class='col-num'>2</td><td class='col-num'>₦25,000.00</td><td class='col-num'>₦50,000.00</td></tr></tbody></table><div class=\"r-summary\"><div class=\"r-paymeta\"><div><span class='k'>Payment method</span><span>Cash</span></div><div><span class=\"k\">Payment Status</span><span class=\"r-status st-partially-paid\">PARTIALLY PAID</span></div><div class='r-notes'><span class='k'>Notes</span><p>hi</p></div></div><div class=\"r-totals\"><div><span>Subtotal</span><span>₦50,000.00</span></div><div><span>Discount</span><span>₦0.00</span></div><div><span>Tax (0%)</span><span>₦0.00</span></div><div class=\"grand\"><span>Grand Total</span><span>₦50,000.00</span></div><div><span>Amount Paid</span><span>₦20,000.00</span></div><div><span>Balance Due</span><span>₦30,000.00</span></div></div></div><div class=\"r-foot\">Thank you for your business.</div>",
+   "hasLogo": false
+  }
+ },
+ {
+  "record": {
+   "id": "r1",
+   "number": "RCT-000010",
+   "date": "2026-11-01",
+   "time": "10:00",
+   "payment": "Cash",
+   "currency": "NGN",
+   "template": "modern",
+   "business": {
+    "name": "Test Biz",
+    "address": "1 Road\nIbadan",
+    "phone": "+234 800",
+    "email": "a@b.c"
+   },
+   "customer": {
+    "name": "Ada",
+    "phone": "0802"
+   },
+   "items": [
+    {
+     "name": "Rice",
+     "qty": 2,
+     "price": 25000,
+     "total": 50000
+    }
+   ],
+   "subtotal": 50000,
+   "discount": 0,
+   "taxPct": 0,
+   "tax": 0,
+   "shipping": 0,
+   "grand": 50000,
+   "paid": 0,
+   "balance": 50000,
+   "status": "UNPAID",
+   "notes": "hi"
+  },
+  "out": {
+   "className": "receipt style-modern hidden-logo",
+   "html": "<div class=\"r-brand\"><div class=\"r-brand-text\"><div class=\"r-biz\">Test Biz</div><div class=\"r-contact\">1 Road<br>Ibadan<br>+234 800 · a@b.c</div></div></div><div class=\"r-banner\"><span class=\"r-title\">RECEIPT</span></div><div class=\"r-info\"><div><span class=\"k\">Receipt No.</span><span class=\"v\">RCT-000010</span></div><div><span class=\"k\">Date</span><span class=\"v\">2026-11-01 · 10:00</span></div><div class=\"span-2\"><span class=\"k\">Customer</span><span class=\"v\">Ada · 0802</span></div></div><table class=\"r-table\"><thead><tr><th class=\"col-item\">Item</th><th class=\"col-num\">Qty</th><th class=\"col-num\">Price</th><th class=\"col-num\">Total</th></tr></thead><tbody><tr><td class='col-item'>Rice</td><td class='col-num'>2</td><td class='col-num'>₦25,000.00</td><td class='col-num'>₦50,000.00</td></tr></tbody></table><div class=\"r-summary\"><div class=\"r-paymeta\"><div><span class='k'>Payment method</span><span>Cash</span></div><div><span class=\"k\">Payment Status</span><span class=\"r-status st-unpaid\">UNPAID</span></div><div class='r-notes'><span class='k'>Notes</span><p>hi</p></div></div><div class=\"r-totals\"><div><span>Subtotal</span><span>₦50,000.00</span></div><div><span>Discount</span><span>₦0.00</span></div><div><span>Tax (0%)</span><span>₦0.00</span></div><div class=\"grand\"><span>Grand Total</span><span>₦50,000.00</span></div><div><span>Amount Paid</span><span>₦0.00</span></div><div><span>Balance Due</span><span>₦50,000.00</span></div></div></div><div class=\"r-foot\">Thank you for your business.</div>",
+   "hasLogo": false
+  }
+ },
+ {
+  "record": {
+   "id": "r1",
+   "number": "RCT-000010",
+   "date": "2026-11-01",
+   "time": "10:00",
+   "payment": "Cash",
+   "currency": "NGN",
+   "template": "classic",
+   "business": {
+    "name": "Test Biz",
+    "address": "1 Road\nIbadan",
+    "phone": "+234 800",
+    "email": "a@b.c"
+   },
+   "customer": {
+    "name": "Ada",
+    "phone": "0802"
+   },
+   "items": [
+    {
+     "name": "Rice",
+     "qty": 2,
+     "price": 25000,
+     "total": 50000
+    }
+   ],
+   "subtotal": 50000,
+   "discount": 0,
+   "taxPct": 0,
+   "tax": 0,
+   "shipping": 1500,
+   "grand": 51500,
+   "paid": 50000,
+   "balance": 0,
+   "status": "PAID",
+   "notes": "hi",
+   "shareToken": "tok123"
+  },
+  "out": {
+   "className": "receipt style-classic hidden-logo",
+   "html": "<div class=\"r-brand\"><div class=\"r-brand-text\"><div class=\"r-biz\">Test Biz</div><div class=\"r-contact\">1 Road<br>Ibadan<br>+234 800 · a@b.c</div></div></div><div class=\"r-banner\"><span class=\"r-title\">RECEIPT</span></div><div class=\"r-info\"><div><span class=\"k\">Receipt No.</span><span class=\"v\">RCT-000010</span></div><div><span class=\"k\">Date</span><span class=\"v\">2026-11-01 · 10:00</span></div><div class=\"span-2\"><span class=\"k\">Customer</span><span class=\"v\">Ada · 0802</span></div></div><table class=\"r-table\"><thead><tr><th class=\"col-item\">Item</th><th class=\"col-num\">Qty</th><th class=\"col-num\">Price</th><th class=\"col-num\">Total</th></tr></thead><tbody><tr><td class='col-item'>Rice</td><td class='col-num'>2</td><td class='col-num'>₦25,000.00</td><td class='col-num'>₦50,000.00</td></tr></tbody></table><div class=\"r-summary\"><div class=\"r-paymeta\"><div><span class='k'>Payment method</span><span>Cash</span></div><div><span class=\"k\">Payment Status</span><span class=\"r-status st-paid-in-full\">PAID IN FULL</span></div><div class='r-notes'><span class='k'>Notes</span><p>hi</p></div></div><div class=\"r-totals\"><div><span>Subtotal</span><span>₦50,000.00</span></div><div><span>Discount</span><span>₦0.00</span></div><div><span>Tax (0%)</span><span>₦0.00</span></div><div><span>Delivery</span><span>₦1,500.00</span></div><div class=\"grand\"><span>Grand Total</span><span>₦51,500.00</span></div><div><span>Amount Paid</span><span>₦50,000.00</span></div><div><span>Balance Due</span><span>₦0.00</span></div></div></div><div class=\"r-foot\">Thank you for your business.</div><div class=\"r-verify\"><img class=\"r-qr\" alt=\"Verify this receipt\" data-qr=\"https://receipt-pilot.com/r.html?t=tok123\"><p>Scan to verify</p></div>",
+   "hasLogo": false
+  }
+ },
+ {
+  "record": {
+   "id": "r1",
+   "number": "RCT-000010",
+   "date": "2026-11-01",
+   "time": "10:00",
+   "payment": "Cash",
+   "currency": "USD",
+   "template": "classic",
+   "business": {
+    "name": "Test Biz",
+    "address": "1 Road\nIbadan",
+    "phone": "+234 800",
+    "email": "a@b.c"
+   },
+   "customer": {
+    "name": "Ada",
+    "phone": "0802"
+   },
+   "items": [
+    {
+     "name": "Rice",
+     "qty": 2,
+     "price": 25000,
+     "total": 50000
+    }
+   ],
+   "subtotal": 50000,
+   "discount": 0,
+   "taxPct": 0,
+   "tax": 0,
+   "shipping": 0,
+   "grand": 50000,
+   "paid": 50000,
+   "balance": 0,
+   "status": "PAID IN FULL",
+   "notes": "hi",
+   "voided": true
+  },
+  "out": {
+   "className": "receipt style-classic hidden-logo",
+   "html": "<div class=\"r-brand\"><div class=\"r-brand-text\"><div class=\"r-biz\">Test Biz</div><div class=\"r-contact\">1 Road<br>Ibadan<br>+234 800 · a@b.c</div></div></div><div class=\"r-banner\"><span class=\"r-title\">RECEIPT</span></div><div class=\"r-info\"><div><span class=\"k\">Receipt No.</span><span class=\"v\">RCT-000010</span></div><div><span class=\"k\">Date</span><span class=\"v\">2026-11-01 · 10:00</span></div><div class=\"span-2\"><span class=\"k\">Customer</span><span class=\"v\">Ada · 0802</span></div></div><table class=\"r-table\"><thead><tr><th class=\"col-item\">Item</th><th class=\"col-num\">Qty</th><th class=\"col-num\">Price</th><th class=\"col-num\">Total</th></tr></thead><tbody><tr><td class='col-item'>Rice</td><td class='col-num'>2</td><td class='col-num'>$25,000.00</td><td class='col-num'>$50,000.00</td></tr></tbody></table><div class=\"r-summary\"><div class=\"r-paymeta\"><div><span class='k'>Payment method</span><span>Cash</span></div><div><span class=\"k\">Payment Status</span><span class=\"r-status st-paid-in-full\">PAID IN FULL</span></div><div class='r-notes'><span class='k'>Notes</span><p>hi</p></div></div><div class=\"r-totals\"><div><span>Subtotal</span><span>$50,000.00</span></div><div><span>Discount</span><span>$0.00</span></div><div><span>Tax (0%)</span><span>$0.00</span></div><div class=\"grand\"><span>Grand Total</span><span>$50,000.00</span></div><div><span>Amount Paid</span><span>$50,000.00</span></div><div><span>Balance Due</span><span>$0.00</span></div></div></div><div class=\"r-foot\">Thank you for your business.</div>",
+   "hasLogo": false
+  }
+ }
+]

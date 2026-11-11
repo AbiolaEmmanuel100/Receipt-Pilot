@@ -162,6 +162,7 @@ export function Sales() {
               <Field label="Payment status" id="salesPayStatus">
                 <Select id="salesPayStatus" value={pay} onChange={(e) => setPay(e.target.value)}>
                   <option value="all">All payments</option>
+                  <option value="owing">Still owing</option>
                   <option value="PAID IN FULL">Fully paid</option>
                   <option value="PARTIALLY PAID">Partially paid</option>
                   <option value="UNPAID">Unpaid</option>

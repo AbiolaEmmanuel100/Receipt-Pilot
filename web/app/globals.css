@@ -118,6 +118,13 @@
 .r-totals { border: 1px solid #e7e5e4; border-radius: 8px; padding: 8px 12px; }
 .r-totals div { display: flex; justify-content: space-between; padding: 4px 0; font-variant-numeric: tabular-nums; }
 .r-totals .grand { font-weight: 800; font-size: 1.05rem; border-top: 2px solid #1c1917; margin-top: 6px; padding-top: 8px; }
+.r-payments { margin-top: 14px; }
+.r-payments-title { font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: #57534e; margin-bottom: 4px; }
+.r-paytable tfoot td { font-weight: 700; padding-top: 6px; font-variant-numeric: tabular-nums; }
+.r-paytable tfoot tr:first-child td { border-top: 1px solid #e7e5e4; }
+.r-payments-bal td { color: #92400e; }
+.r-paytable td.col-item:first-child, .r-paytable th.col-item:first-child { width: 7.5em; white-space: nowrap; }
+.r-paytable td.col-item:nth-child(2), .r-paytable th.col-item:nth-child(2) { width: auto; }
 .r-foot { margin-top: 22px; padding-top: 10px; border-top: 1px dashed #d6d3d1; color: #57534e; font-size: 0.88rem; text-align: center; }
 .r-verify { margin-top: 12px; text-align: center; }
 .r-verify img { width: 96px; height: 96px; }

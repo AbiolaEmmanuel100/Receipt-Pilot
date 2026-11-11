@@ -1,6 +1,7 @@
 import { sanitize as s } from "./val";
 import { money } from "./calc";
 import type { Receipt } from "./types";
+import { issuePaid, paymentsOf } from "./payments";
 
 // Port of js/receipt.js. The markup and class names are identical, so the
 // receipt looks the same on screen, in print, in the PDF and in the PNG.
@@ -45,6 +46,28 @@ export function receiptHtml(record: Partial<Receipt>): { className: string; html
   const footer = (biz.footer && String(biz.footer).trim()) || "Thank you for your business.";
   const verifyUrl = verifyUrlFor(record as Receipt);
 
+  // Payment history: only for receipts with recorded payments, so receipts
+  // without any keep exactly the same markup as before.
+  const pays = paymentsOf(record);
+  let history = "";
+  let cleared = "";
+  if (pays.length) {
+    const opening = issuePaid(record);
+    const prow = (d: string, label: string, amt: unknown) =>
+      "<tr><td class='col-item'>" + s(d) + "</td><td class='col-item'>" + label + "</td><td class='col-num'>" + money(amt, cur) + "</td></tr>";
+    const hrows: string[] = [];
+    if (opening > 0) hrows.push(prow(record.date || "", "Paid when issued" + (record.payment ? " · " + s(record.payment) : ""), opening));
+    pays.forEach((p) => hrows.push(prow(p.date, s(p.method || "Payment") + (p.note ? " · " + s(p.note) : ""), p.amount)));
+    history =
+      '<div class="r-payments"><div class="r-payments-title">Payment history</div>' +
+      '<table class="r-table r-paytable"><thead><tr><th class="col-item">Date</th><th class="col-item">Details</th><th class="col-num">Amount</th></tr></thead><tbody>' +
+      hrows.join("") + "</tbody><tfoot>" +
+      "<tr><td colspan='2'>Total paid</td><td class='col-num'>" + money(record.paid, cur) + "</td></tr>" +
+      "<tr class='r-payments-bal'><td colspan='2'>Balance remaining</td><td class='col-num'>" + money(record.balance, cur) + "</td></tr>" +
+      "</tfoot></table></div>";
+    if (record.paidInFullOn && (status === "PAID IN FULL")) cleared = "<div><span class='k'>Paid in full on</span><span>" + s(record.paidInFullOn) + "</span></div>";
+  }
+
   const html =
     '<div class="r-brand">' + (logo ? logo : "") +
       '<div class="r-brand-text">' +
@@ -64,6 +87,7 @@ export function receiptHtml(record: Partial<Receipt>): { className: string; html
       '<div class="r-paymeta">' +
         "<div><span class='k'>Payment method</span><span>" + s(record.payment || "") + "</span></div>" +
         '<div><span class="k">Payment Status</span><span class="r-status ' + statusClass + '">' + s(status) + "</span></div>" +
+        cleared +
         (record.notes ? "<div class='r-notes'><span class='k'>Notes</span><p>" + s(record.notes).replace(/\n/g, "<br>") + "</p></div>" : "") +
       "</div>" +
       '<div class="r-totals">' +
@@ -76,6 +100,7 @@ export function receiptHtml(record: Partial<Receipt>): { className: string; html
         "<div><span>Balance Due</span><span>" + money(record.balance, cur) + "</span></div>" +
       "</div>" +
     "</div>" +
+    history +
     '<div class="r-foot">' + s(footer) + "</div>" +
     (verifyUrl ? '<div class="r-verify"><img class="r-qr" alt="Verify this receipt" data-qr="' + s(verifyUrl) + '"><p>Scan to verify</p></div>' : "");
 

@@ -1,5 +1,6 @@
 import type { Receipt } from "@/lib/types";
 import { money } from "@/lib/calc";
+import { isOwing } from "@/lib/payments";
 
 // Pure helpers ported from js/records.js
 function startOfWeek(d: Date) {
@@ -50,7 +51,8 @@ export function applyFilters(all: Receipt[], f: Filters): Receipt[] {
   else if (f.range === "custom") { from = f.from || from; to = f.to || to; }
   const out = all.filter((r) => {
     if (f.range !== "all") { const k = dateKey(r.date); if (!k || !(k >= from && k <= to)) return false; }
-    if (f.status !== "all") { const rs = r.status === "PAID" ? "PAID IN FULL" : r.status; if (rs !== f.status) return false; }
+    if (f.status === "owing") { if (!isOwing(r)) return false; }
+    else if (f.status !== "all") { const rs = r.status === "PAID" ? "PAID IN FULL" : r.status; if (rs !== f.status) return false; }
     if (f.method !== "all" && r.payment !== f.method) return false;
     if (f.currency !== "all" && r.currency !== f.currency) return false;
     if (qNum && String(r.number || "").toLowerCase().indexOf(qNum) === -1) return false;

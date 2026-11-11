@@ -26,6 +26,7 @@ import { cx } from "@/components/ui/cx";
 import { IconChevronDown, IconDownload, IconEdit, IconEye, IconImage, IconMinus, IconPlus, IconPrint, IconShare, IconTrash, IconCheck, IconList } from "@/components/ui/Icons";
 import { ReceiptPaper } from "@/components/receipt/ReceiptPaper";
 import { openShare } from "@/components/app/ShareSheet";
+import { amountsLocked, applyEditLock, editLockError, paymentLocked } from "@/lib/payments";
 import { FormState, ItemField, emptyForm, effectivePaid, isDirty, lockedPaid, newItem, readForm, statusMessage, withBusiness, withRecord } from "./form";
 
 const FORM_DRAFT = "receiptly_open_form_v1";
@@ -78,6 +79,9 @@ export function Generator() {
   const fr = useRef(f);
   fr.current = f;
   const [editingId, setEditingId] = useState<string | null>(null);
+  // Payment fields of the receipt being edited are locked once it owes money or
+  // has recorded payments; they change only via Record payment in Receipt history.
+  const [editLock, setEditLock] = useState<{ pay: boolean; amounts: boolean }>({ pay: false, amounts: false });
   const editRef = useRef<string | null>(null);
   editRef.current = editingId;
   const lastSaved = useRef<string | null>(null);
@@ -206,6 +210,7 @@ export function Generator() {
     if (gen !== authGen.current) return;
     if (opts.restore) next = restoreOpenForm(next);
     setEditingId(null);
+    setEditLock({ pay: false, amounts: false });
     setF(next);
     setBizOpen(!(biz && biz.name));
   }
@@ -231,6 +236,7 @@ export function Generator() {
         const rec = await S.getReceipt(editId);
         if (rec) {
           setEditingId(rec.id);
+          setEditLock({ pay: paymentLocked(rec), amounts: amountsLocked(rec) });
           setF(withRecord(withBusiness(emptyForm(), biz, suggest), rec, suggest));
           setBizOpen(false);
           setBooted(true);
@@ -422,7 +428,9 @@ export function Generator() {
       if (editing) {
         const prev = await S.getReceipt(editing);
         if (!prev) { toast("That receipt is not available on this account.", "error"); setEditingId(null); done(); return; }
-        record = Object.assign({}, prev, d, {
+        const lockMsg = editLockError(prev, d);
+        if (lockMsg) { toast(lockMsg, "error"); done(); return; }
+        record = Object.assign({}, prev, applyEditLock(prev, d), {
           id: editing, updatedAt: now, createdAt: prev.createdAt ? prev.createdAt : now,
           shareToken: prev.shareToken || makeToken(),
           versions: (prev.versions || []).concat([{ at: now, action: "edited" }]).slice(-20),
@@ -489,6 +497,7 @@ export function Generator() {
       let record: Receipt = { id: editing || uid(), number: d.number, createdAt: now, updatedAt: now, isDraft: true, syncStatus: "pending", shareToken: makeToken() };
       if (editing) {
         const prev = await S.getReceipt(editing);
+        if (paymentLocked(prev)) { toast("This receipt is already saved and has a balance or payments. Use Save receipt to keep your changes.", "error"); return; }
         record = Object.assign({}, prev, d, record, { id: editing, createdAt: prev && prev.createdAt ? prev.createdAt : now, shareToken: (prev && prev.shareToken) || record.shareToken }) as Receipt;
       } else {
         record = Object.assign({}, d, record) as Receipt;
@@ -618,6 +627,8 @@ export function Generator() {
           {/* Items */}
           <Card className="p-4 sm:p-5">
             <h2 className="mb-3 text-[17px] font-semibold">Items</h2>
+            {editLock.amounts ? <p className="mb-3 rounded-xl bg-bg px-3 py-2 text-sm text-muted" id="amountsLockNote">Items and amounts are fixed because payments have been recorded on this receipt.</p> : null}
+            <fieldset disabled={editLock.amounts} className="min-w-0 disabled:opacity-70">
             <ul className="space-y-3">
               {f.items.map((it, i) => {
                 const total = (data.items && data.items[i] && data.items[i].total) || 0;
@@ -651,6 +662,7 @@ export function Generator() {
               })}
             </ul>
             <Button variant="secondary" className="mt-3" block onClick={addItem}><IconPlus className="size-4" />Add item</Button>
+            </fieldset>
           </Card>
 
           {/* Customer */}
@@ -672,10 +684,10 @@ export function Generator() {
           <Card className="space-y-4 p-4 sm:p-5">
             <h2 className="text-[17px] font-semibold">Payment</h2>
             <ChipGroup name="paymentMethod" label="Payment method" value={f.payment} options={PAY_METHODS} onChange={(v) => update({ payment: v })} />
-            <ChipGroup name="paymentStatus" label="Payment status" value={f.status} options={STATUSES} onChange={(v) => update({ status: v, paid: v === "PARTIALLY PAID" ? "" : f.paid })} />
+            <ChipGroup name="paymentStatus" label="Payment status" value={f.status} options={STATUSES} disabled={editLock.pay} onChange={(v) => update({ status: v, paid: v === "PARTIALLY PAID" ? "" : f.paid })} />
             <div className="grid grid-cols-2 gap-4">
               <Field label="Amount paid" id="amountPaid">
-                <Input id="amountPaid" type="number" inputMode="decimal" min={0} step="0.01" readOnly={locked} aria-readonly={locked} className="tabular" value={locked ? effectivePaid(f) : f.paid} onChange={(e) => update({ paid: e.target.value })} />
+                <Input id="amountPaid" type="number" inputMode="decimal" min={0} step="0.01" readOnly={locked || editLock.pay} aria-readonly={locked || editLock.pay} className="tabular" value={locked ? effectivePaid(f) : f.paid} onChange={(e) => update({ paid: e.target.value })} />
               </Field>
               <div>
                 <span className="mb-1.5 block text-sm font-semibold">Balance due</span>
@@ -683,6 +695,13 @@ export function Generator() {
               </div>
             </div>
             {hint ? <p className="text-sm font-semibold text-danger" role="status" id="statusHint">{hint}</p> : null}
+            {editLock.pay && editingId ? (
+              <div className="rounded-2xl border border-warn/30 bg-warn-bg/60 px-4 py-3 text-sm text-[#7c2d12]" id="payLockNote" role="note">
+                <p className="font-semibold">Payments are recorded separately</p>
+                <p className="mt-0.5">To add money received, open this receipt in Receipt history and tap <strong>Record payment</strong>. That keeps a clear payment history and updates the balance for you.</p>
+                <Link href={"/records?view=" + encodeURIComponent(editingId)} className="mt-1 inline-flex min-h-11 items-center font-semibold text-brand underline-offset-2 hover:underline">Go to Record payment</Link>
+              </div>
+            ) : null}
 
             <div className="rounded-2xl border border-line">
               <button type="button" onClick={() => setExtrasOpen((v) => !v)} aria-expanded={extrasOpen} aria-controls={extrasOpen ? "extras" : undefined}
@@ -692,9 +711,9 @@ export function Generator() {
               </button>
               {extrasOpen ? (
                 <div id="extras" className="grid grid-cols-2 gap-4 border-t border-line p-4 sm:grid-cols-3">
-                  <Field label="Discount" id="discount"><Input id="discount" type="number" inputMode="decimal" min={0} step="0.01" className="tabular" value={f.discount} onChange={(e) => update({ discount: e.target.value })} /></Field>
-                  <Field label="Tax %" id="taxPct"><Input id="taxPct" type="number" inputMode="decimal" min={0} step="0.01" className="tabular" value={f.taxPct} onChange={(e) => update({ taxPct: e.target.value })} /></Field>
-                  <Field label="Delivery / shipping" id="shipping" className="col-span-2 sm:col-span-1"><Input id="shipping" type="number" inputMode="decimal" min={0} step="0.01" className="tabular" value={f.shipping === "0" ? "" : f.shipping} placeholder="0" onChange={(e) => update({ shipping: e.target.value })} /></Field>
+                  <Field label="Discount" id="discount"><Input id="discount" disabled={editLock.amounts} type="number" inputMode="decimal" min={0} step="0.01" className="tabular" value={f.discount} onChange={(e) => update({ discount: e.target.value })} /></Field>
+                  <Field label="Tax %" id="taxPct"><Input id="taxPct" disabled={editLock.amounts} type="number" inputMode="decimal" min={0} step="0.01" className="tabular" value={f.taxPct} onChange={(e) => update({ taxPct: e.target.value })} /></Field>
+                  <Field label="Delivery / shipping" id="shipping" className="col-span-2 sm:col-span-1"><Input id="shipping" disabled={editLock.amounts} type="number" inputMode="decimal" min={0} step="0.01" className="tabular" value={f.shipping === "0" ? "" : f.shipping} placeholder="0" onChange={(e) => update({ shipping: e.target.value })} /></Field>
                 </div>
               ) : null}
             </div>
@@ -713,7 +732,7 @@ export function Generator() {
               <div id="details" className="mt-4 grid grid-cols-2 gap-4">
                 <Field label="Receipt number" id="receiptNo" className="col-span-2 sm:col-span-1"><Input id="receiptNo" value={f.number} onChange={(e) => update({ number: e.target.value })} /></Field>
                 <Field label="Currency" id="currency" className="col-span-2 sm:col-span-1">
-                  <Select id="currency" value={f.currency} onChange={(e) => update({ currency: e.target.value })}>{CURRENCY_OPTIONS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}</Select>
+                  <Select id="currency" disabled={editLock.amounts} value={f.currency} onChange={(e) => update({ currency: e.target.value })}>{CURRENCY_OPTIONS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}</Select>
                 </Field>
                 <Field label="Date" id="receiptDate"><Input id="receiptDate" type="date" value={f.date} onChange={(e) => update({ date: e.target.value })} /></Field>
                 <Field label="Time" id="receiptTime"><Input id="receiptTime" type="time" value={f.time} onChange={(e) => update({ time: e.target.value })} /></Field>
