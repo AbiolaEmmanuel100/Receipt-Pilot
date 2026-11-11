@@ -27,6 +27,14 @@ names; Install app entry: Chrome `beforeinstallprompt` path, iPhone Safari guide
 errors; `BASE=https://receipt-pilot.com LIVE=1` audits public pages read-only), `tests/focus.js` (visible focus on every Tab
 stop), `tests/phoneshot.js` and `tests/polishshots.js` (screenshots).
 
+
+Record payments (branch `record-payments`): `node tests/payments.unit.js` (lib/payments rules, legacy receipt markup
+byte-identical to the pre-change renderer via `tests/fixtures/legacy-receipts.json`, payment-history markup, sales
+"owing" filter, payload round trip) and `tests/p6payments.js` (browser, mocked: partial/multiple/full payments,
+overpayment blocked, undo with confirmation, image/PDF markup, edit lock, Owing filter + Balance column, synced row keys).
+Payment history is stored inside the receipt object (`payments`, `paidAtIssue`, `paidInFullOn`, `undonePayments`),
+which already syncs in the existing `receipts.payload` JSON column; no schema change.
+
 Design system: one font (Inter via next/font), tokens in `app/globals.css` (`@theme`), Lucide icons wrapped in
 `components/ui/Icons.tsx`, dialogs/sheets on Radix Dialog (`components/ui/Modal.tsx`, same props as before). Single-line
 controls share `controlClass` (exact 44px height). The phone field's country picker is a fixed 6.25rem (6.75rem from `sm`)
