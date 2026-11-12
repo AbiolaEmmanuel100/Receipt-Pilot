@@ -66,6 +66,7 @@ export function BillingPage() {
     <div className="mx-auto max-w-3xl space-y-5">
       <div>
         <h1 className="text-[1.625rem] font-bold tracking-tight md:text-[1.875rem]">Subscription</h1>
+        <p className="text-sm text-muted">Every account starts with a 14-day free trial. After that, choose a plan and pay on Paystack.</p>
       </div>
 
       <Card className="space-y-3 p-4 sm:p-5">
@@ -117,6 +118,9 @@ export function BillingPage() {
             <span>Automatic renewal — not available until Paystack recurring plans are configured and you explicitly opt in</span>
           </label>
         </fieldset>
+
+        <p className="text-sm text-muted">A successful one-time payment is not consent for future charges. Receipts already saved are not deleted if access expires. Files already stored on this device cannot be removed remotely.</p>
+        <p className="text-sm text-muted">The charge is always in Nigerian Naira. Local currency display is an estimate only.</p>
 
         <p id="billingError" role="alert" className={cx("text-[15px] font-semibold text-danger", !error && "sr-only")}>{error}</p>
         <div className="sticky bottom-[calc(68px+env(safe-area-inset-bottom))] z-20 -mx-4 border-t border-line bg-white/95 px-4 py-3 backdrop-blur lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:p-0">
